@@ -1,0 +1,117 @@
+body{
+background:#0b0f14;
+color:white;
+font-family:Segoe UI,Arial;
+margin:0;
+}
+
+.navbar{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:15px 40px;
+background:#05080c;
+border-bottom:1px solid #222;
+}
+
+.nav-links a{
+color:#aaa;
+margin-right:20px;
+text-decoration:none;
+}
+
+.nav-links a:hover{
+color:white;
+}
+
+.container{
+padding:40px;
+}
+.banner{
+width:100%;
+height:500px;   /* chiều cao banner */
+overflow:hidden;
+}
+
+.banner img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+.card{
+background:#12161d;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+border:1px solid #1e2530;
+}
+
+input{
+padding:10px;
+margin:5px;
+background:#1b2027;
+border:none;
+color:white;
+}
+
+button{
+padding:8px 15px;
+background:#2b6cff;
+border:none;
+color:white;
+cursor:pointer;
+border-radius:5px;
+}
+
+button:hover{
+background:#3d7cff;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:#12161d;
+border-radius:10px;
+overflow:hidden;
+}
+
+th{
+background:#1a1f27;
+padding:12px;
+text-align:left;
+color:#aaa;
+}
+
+td{
+padding:12px;
+border-top:1px solid #222;
+}
+
+tr:hover{
+background:#1b2230;
+}
+
+.logo{
+width:30px;
+height:30px;
+object-fit:contain;
+margin-right:8px;
+vertical-align:middle;
+}
+
+.rank1{background:#ffd70020;}
+.rank2{background:#c0c0c020;}
+.rank3{background:#cd7f3220;}
+
+@media(max-width:768px){
+
+.navbar{
+flex-direction:column;
+gap:10px;
+}
+
+.container{
+padding:20px;
+}
+
+}

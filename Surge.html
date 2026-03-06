@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>SURGE MASTER</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="navbar">
+
+<div>SURGE MASTER</div>
+
+<div class="nav-links">
+<a href="MPLID.html">MPL ID</a>
+<a href="MPLPH.html">MPL PH</a>
+<a href="MPLMY.html">MPL MY</a>
+<a href="India.html">Ấn Độ</a>
+<a href="MCTSEA.html">MCT SEA</a>
+<a href="MCTEMEA.html">MCT EMEA</a>
+<a href="MCTAMER.html">MCT AMER</a>
+<a href="EECA.html">EECA</a>
+<a href="MCTEA.html">MCT EA</a>
+<a href="rankingglobal.html">Global Ranking</a>
+
+</div>
+
+</div>
+
+<div class="container">
+
+<h2>SURGE MASTER - FB: MỜ LỜ THẬT LOST TEACH</h2>
+<h3>SURGE MASTER là giải đấu lớn nhất WEU. Giải đấu nằm trong hệ thống MCT EMEA</h3>
+
+<input id="search" placeholder="Search team..." onkeyup="searchTeam()">
+
+<!-- ADMIN PANEL -->
+
+<div class="card" id="adminPanel">
+
+<input id="team" placeholder="Team name">
+<input type="file" id="logo" accept="image/*">
+<input id="win" placeholder="Win">
+<input id="lose" placeholder="Lose">
+
+<button onclick="add()">Add Team</button>
+
+</div>
+
+<table>
+
+<tr>
+<th>Team</th>
+<th>Win</th>
+<th>Lose</th>
+<th>Points</th>
+<th>Action</th>
+</tr>
+
+<tbody id="list"></tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* Firebase */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAwv0kDiGGvFcpZm2lKhD9Jq6dFoJXWGm0",
+  authDomain: "global-power-ranking.firebaseapp.com",
+  databaseURL: "https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "global-power-ranking",
+  storageBucket: "global-power-ranking.firebasestorage.app",
+  messagingSenderId: "382870176620",
+  appId: "1:382870176620:web:2223021ac756c798a2e949",
+  measurementId: "G-6WDYMQNLBJ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* kiểm tra admin */
+
+let isAdmin = localStorage.getItem("login") === "true";
+
+if(!isAdmin){
+document.getElementById("adminPanel").style.display="none";
+}
+
+/* thêm team */
+
+window.add = function(){
+
+if(!isAdmin) return;
+
+let team=document.getElementById("team").value.trim()
+let win=parseInt(document.getElementById("win").value)
+let lose=parseInt(document.getElementById("lose").value)
+let file=document.getElementById("logo").files[0]
+
+if(!team || isNaN(win) || isNaN(lose)){
+alert("Vui lòng nhập đầy đủ thông tin")
+return
+}
+
+let score=(win*280)-(lose*100)
+
+function save(logo){
+
+set(ref(db,"weu/"+team),{
+team,
+logo,
+win,
+lose,
+score
+})
+
+}
+
+if(file){
+
+let reader=new FileReader()
+
+reader.onload=function(e){
+save(e.target.result)
+}
+
+reader.readAsDataURL(file)
+
+}else{
+
+save("")
+
+}
+
+document.getElementById("team").value=""
+document.getElementById("logo").value=""
+document.getElementById("win").value=""
+document.getElementById("lose").value=""
+
+}
+
+/* load realtime */
+
+const teamsRef = ref(db,"weu")
+onValue(teamsRef,(snapshot)=>{
+
+let data = snapshot.val()
+
+if(!data) return
+
+let html=""
+
+/* chuyển object thành array */
+
+let teams = Object.values(data)
+
+/* sắp xếp theo điểm cao → thấp */
+
+teams.sort((a,b)=>b.score-a.score)
+
+teams.forEach((t)=>{
+
+html+=`
+
+<tr>
+
+<td>
+<img class="logo" src="${t.logo}" onerror="this.src='https://via.placeholder.com/30'">
+${t.team}
+</td>
+
+<td>${t.win}</td>
+<td>${t.lose}</td>
+<td>${t.score}</td>
+
+<td>
+
+${isAdmin ? `
+<button onclick="edit('${t.team}')">Edit</button>
+<button onclick="removeTeam('${t.team}')">Delete</button>
+` : ""}
+
+</td>
+
+</tr>
+
+`
+
+})
+
+document.getElementById("list").innerHTML = html
+
+})
+
+/* edit */
+
+window.edit = function(team){
+
+if(!isAdmin) return;
+
+let win=prompt("Win")
+let lose=prompt("Lose")
+
+win=parseInt(win)
+lose=parseInt(lose)
+
+if(isNaN(win)||isNaN(lose)) return
+
+let score=(win*280)-(lose*100)
+
+set(ref(db,"weu/"+team+"/win"),win)
+set(ref(db,"weu/"+team+"/lose"),lose)
+set(ref(db,"weu/"+team+"/score"),score)
+
+}
+
+/* delete */
+
+window.removeTeam = function(team){
+
+if(!isAdmin) return;
+
+if(confirm("Xóa đội này?")){
+remove(ref(db,"weu/"+team))
+}
+
+}
+
+/* search */
+
+window.searchTeam = function(){
+
+let key=document.getElementById("search").value.toLowerCase()
+
+document.querySelectorAll("#list tr").forEach(row=>{
+
+row.style.display=row.innerText.toLowerCase().includes(key) ? "" : "none"
+
+})
+
+}
+
+</script>
+
+</body>
+</html>

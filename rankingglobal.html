@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Global Ranking</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="navbar">
+
+<div>GLOBAL POWER RANKING - FB: MỜ LỜ THẬT LOST TEACH</div>
+
+<div class="nav-links">
+  
+<a href="MPLID.html">MPL ID</a>
+<a href="MPLPH.html">MPL PH</a>
+<a href="MPLMY.html">MPL MY</a>
+<a href="India.html">Ấn Độ</a>
+<a href="MCTSEA.html">MCT SEA</a>
+<a href="MCTEMEA.html">MCT EMEA</a>
+<a href="MCTAMER.html">MCT AMER</a>
+<a href="EECA.html">EECA</a>
+<a href="MCTEA.html">MCT EA</a>
+<a href="rankingglobal.html">Global Ranking</a>
+
+</div>
+
+</div>
+
+<div class="banner">
+
+<img id="bannerImg">
+
+<div id="bannerAdmin">
+
+<input type="file" id="bannerUpload">
+
+<button onclick="uploadBanner()">Upload Banner</button>
+
+</div>
+
+</div>
+
+<div class="container">
+
+<h2>Global Ranking</h2>
+
+<table>
+
+<tr>
+<th>Rank</th>
+<th>Team</th>
+<th>Total Points</th>
+</tr>
+
+<tbody id="rank"></tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* Firebase config */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAwv0kDiGGvFcpZm2lKhD9Jq6dFoJXWGm0",
+  authDomain: "global-power-ranking.firebaseapp.com",
+  databaseURL: "https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "global-power-ranking",
+  storageBucket: "global-power-ranking.firebasestorage.app",
+  messagingSenderId: "382870176620",
+  appId: "1:382870176620:web:2223021ac756c798a2e949",
+  measurementId: "G-6WDYMQNLBJ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* kiểm tra admin */
+
+let isAdmin = localStorage.getItem("login") === "true";
+
+if(isAdmin){
+document.getElementById("bannerAdmin").style.display="block";
+}else{
+document.getElementById("bannerAdmin").style.display="none";
+}
+/* upload banner */
+
+window.uploadBanner=function(){
+
+if(!isAdmin) return;
+
+let file=document.getElementById("bannerUpload").files[0];
+
+if(!file) return;
+
+let reader=new FileReader();
+
+reader.onload=function(e){
+
+set(ref(db,"site/banner"),{
+img:e.target.result
+})
+
+}
+
+reader.readAsDataURL(file)
+
+}
+
+/* load banner realtime */
+
+const bannerRef = ref(db,"site/banner");
+
+onValue(bannerRef,(snapshot)=>{
+
+let data=snapshot.val();
+
+if(!data) return;
+
+document.getElementById("bannerImg").src=data.img;
+
+});
+
+/* dữ liệu giải */
+
+const tour1Ref = ref(db,"tour1");
+const tour2Ref = ref(db,"tour2");
+const tour3Ref = ref(db,"tour3");
+const eecaRef = ref(db,"eeca");
+const indiaRef = ref(db,"india");
+const thaiRef = ref(db,"thai");
+const myanmarRef = ref(db,"myanmar");
+const vnRef = ref(db,"vn");
+const khRef = ref(db,"kh");
+const laoRef = ref(db,"lao");
+const sgRef = ref(db,"sg");
+const menaRef = ref(db,"mena");
+const weuRef = ref(db,"weu");
+const mtcRef = ref(db,"mtc");
+const latamRef = ref(db,"latam");
+const usaRef = ref(db,"usa");
+const naRef = ref(db,"na");
+const cnRef = ref(db,"cn");
+const jpRef = ref(db,"jp");
+const krRef = ref(db,"kr");
+const mglRef = ref(db,"mgl");
+let tour1Data = {};
+let tour2Data = {};
+let tour3Data = {};
+let eecaData = {};
+let indiaData = {};
+let thaiData = {};
+let myanmarData = {};
+let vnData = {};
+let khData = {};
+let laoData = {};
+let sgData = {};
+let menaData = {};
+let weuData = {};
+let mtcData = {};
+let latamData = {};
+let naData = {};
+let usaData = {};
+let cnData = {};
+let jpData = {};
+let krData = {};
+let mglData = {};
+function updateRanking(){
+
+let map={};
+
+/* gộp dữ liệu */
+
+function addData(data){
+
+if(!data) return
+
+Object.values(data).forEach(t=>{
+
+if(!map[t.team]){
+
+map[t.team]={
+team:t.team,
+logo:t.logo,
+score:0
+}
+
+}
+
+map[t.team].score+=t.score
+
+})
+
+}
+
+addData(tour1Data)
+addData(tour2Data)
+addData(tour3Data)
+addData(eecaData)
+addData(indiaData)
+addData(thaiData)
+addData(myanmarData)
+addData(vnData)
+addData(khData)
+addData(laoData)
+addData(sgData)
+addData(menaData)
+addData(weuData)
+addData(mtcData)
+addData(latamData)
+addData(naData)
+addData(usaData)
+addData(cnData)
+addData(krData)
+addData(jpData)
+addData(mglData)
+/* chuyển thành array */
+
+let teams=Object.values(map)
+
+/* sort điểm */
+
+teams.sort((a,b)=>b.score-a.score)
+
+let html=""
+
+teams.forEach((t,i)=>{
+
+let rankClass=""
+
+if(i==0) rankClass="rank1"
+if(i==1) rankClass="rank2"
+if(i==2) rankClass="rank3"
+if(i==3) rankClass="rank4"
+
+html+=`
+
+<tr class="${rankClass}">
+
+<td>${i+1}</td>
+
+<td>
+<img class="logo" src="${t.logo}" onerror="this.src='https://via.placeholder.com/30'">
+${t.team}
+</td>
+
+<td>${t.score}</td>
+
+</tr>
+
+`
+
+})
+
+document.getElementById("rank").innerHTML=html
+
+}
+
+/* realtime */
+
+onValue(tour1Ref,(snapshot)=>{
+tour1Data=snapshot.val()
+updateRanking()
+})
+
+onValue(tour2Ref,(snapshot)=>{
+tour2Data=snapshot.val()
+updateRanking()
+})
+
+onValue(tour3Ref,(snapshot)=>{
+tour3Data=snapshot.val()
+updateRanking()
+})
+
+onValue(eecaRef,(snapshot)=>{
+eecaData=snapshot.val()
+updateRanking()
+})
+
+onValue(indiaRef,(snapshot)=>{
+indiaData=snapshot.val()
+updateRanking()
+})
+
+onValue(thaiRef,(snapshot)=>{
+thaiData=snapshot.val()
+updateRanking()
+})
+
+onValue(myanmarRef,(snapshot)=>{
+myanmarData=snapshot.val()
+updateRanking()
+})
+
+onValue(vnRef,(snapshot)=>{
+vnData=snapshot.val()
+updateRanking()
+})
+
+onValue(khRef,(snapshot)=>{
+khData=snapshot.val()
+updateRanking()
+})
+onValue(sgRef,(snapshot)=>{
+sgData=snapshot.val()
+updateRanking()
+})
+onValue(laoRef,(snapshot)=>{
+laoData=snapshot.val()
+updateRanking()
+})
+onValue(menaRef,(snapshot)=>{
+menaData=snapshot.val()
+updateRanking()
+})
+onValue(weuRef,(snapshot)=>{
+weuData=snapshot.val()
+updateRanking()
+})
+onValue(mtcRef,(snapshot)=>{
+laoData=snapshot.val()
+updateRanking()
+})
+onValue(naRef,(snapshot)=>{
+naData=snapshot.val()
+updateRanking()
+})
+onValue(latamRef,(snapshot)=>{
+latamData=snapshot.val()
+updateRanking()
+})
+onValue(usaRef,(snapshot)=>{
+usaData=snapshot.val()
+updateRanking()
+})
+onValue(krRef,(snapshot)=>{
+krData=snapshot.val()
+updateRanking()
+})
+onValue(cnRef,(snapshot)=>{
+cnData=snapshot.val()
+updateRanking()
+})
+onValue(jpRef,(snapshot)=>{
+jpData=snapshot.val()
+updateRanking()
+})
+onValue(mglRef,(snapshot)=>{
+mglData=snapshot.val()
+updateRanking()
+})
+</script>
+
+</body>
+</html>
