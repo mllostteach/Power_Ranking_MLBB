@@ -5,6 +5,8 @@ font-family:Segoe UI,Arial;
 margin:0;
 }
 
+/* NAVBAR */
+
 .navbar{
 display:flex;
 justify-content:space-between;
@@ -24,12 +26,52 @@ text-decoration:none;
 color:white;
 }
 
+/* CONTAINER */
+
 .container{
 padding:40px;
 }
+.dropdown{
+position:relative;
+display:inline-block;
+}
+
+.dropbtn{
+color:#aaa;
+cursor:pointer;
+}
+
+.dropdown-content{
+display:none;
+position:absolute;
+background:#12161d;
+min-width:160px;
+border:1px solid #1e2530;
+border-radius:6px;
+z-index:10;
+}
+
+.dropdown-content a{
+display:block;
+padding:8px 12px;
+color:#aaa;
+text-decoration:none;
+}
+
+.dropdown-content a:hover{
+background:#1b2230;
+color:white;
+}
+
+.dropdown:hover .dropdown-content{
+display:block;
+}
+/* BANNER */
+
 .banner{
+position:relative;
 width:100%;
-height:500px;   /* chiều cao banner */
+height:500px;
 overflow:hidden;
 }
 
@@ -38,6 +80,27 @@ width:100%;
 height:100%;
 object-fit:cover;
 }
+
+/* ADMIN BANNER PANEL */
+
+#bannerAdmin{
+position:absolute;
+bottom:20px;
+left:20px;
+background:rgba(0,0,0,0.7);
+padding:10px 15px;
+border-radius:6px;
+z-index:10;
+display:none;
+}
+
+#bannerAdmin input{
+margin:0;
+margin-right:10px;
+}
+
+/* CARD */
+
 .card{
 background:#12161d;
 padding:20px;
@@ -46,13 +109,18 @@ margin-bottom:20px;
 border:1px solid #1e2530;
 }
 
+/* INPUT */
+
 input{
 padding:10px;
 margin:5px;
 background:#1b2027;
 border:none;
 color:white;
+border-radius:4px;
 }
+
+/* BUTTON */
 
 button{
 padding:8px 15px;
@@ -66,6 +134,8 @@ border-radius:5px;
 button:hover{
 background:#3d7cff;
 }
+
+/* TABLE */
 
 table{
 width:100%;
@@ -91,6 +161,8 @@ tr:hover{
 background:#1b2230;
 }
 
+/* TEAM LOGO */
+
 .logo{
 width:30px;
 height:30px;
@@ -99,9 +171,75 @@ margin-right:8px;
 vertical-align:middle;
 }
 
-.rank1{background:#ffd70020;}
-.rank2{background:#c0c0c020;}
-.rank3{background:#cd7f3220;}
+/* TOP RANK COLORS */
+
+.rank1{
+background:#ffd70020;
+}
+
+.rank2{
+background:#c0c0c020;
+}
+
+.rank3{
+background:#cd7f3220;
+}
+
+/* TROPHY COLORS */
+
+.gold{
+color:#FFD700;
+font-weight:bold;
+}
+
+.silver{
+color:#C0C0C0;
+font-weight:bold;
+}
+
+.bronze{
+color:#CD7F32;
+font-weight:bold;
+}
+
+.normal{
+color:#aaa;
+}
+
+/* M-SERIES */
+
+.mseries{
+color:#8ab4ff;
+font-weight:bold;
+}
+
+.mseries.gold{
+color:#7cc0ff;
+}
+
+.mseries.silver{
+color:#5ea7ff;
+}
+
+.mseries.bronze{
+color:#3f8cff;
+}
+
+/* REGIONAL */
+
+.regional{
+color:#ffb347;
+font-weight:bold;
+}
+
+/* TROPHY SPACING */
+
+td span{
+margin-right:6px;
+font-size:13px;
+}
+
+/* RESPONSIVE */
 
 @media(max-width:768px){
 
@@ -112,6 +250,15 @@ gap:10px;
 
 .container{
 padding:20px;
+}
+
+table{
+font-size:14px;
+}
+
+.logo{
+width:24px;
+height:24px;
 }
 
 }
