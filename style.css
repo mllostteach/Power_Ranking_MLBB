@@ -25,12 +25,39 @@ text-decoration:none;
 .nav-links a:hover{
 color:white;
 }
+.msc-btn{
+background:#ffe58a;
+color:#000 !important;
+padding:6px 14px;
+border-radius:6px;
+font-weight:600;
+}
+
+.msc-btn:hover{
+background:#ffd84d;
+color:#000;
+}
+.mseries-btn{
+background:#8ab4ff;
+color:#000 !important;
+padding:6px 14px;
+border-radius:6px;
+font-weight:600;
+}
+
+.mseries-btn:hover{
+background:#6aa0ff;
+color:#000;
+}
 
 /* CONTAINER */
 
 .container{
 padding:40px;
 }
+
+/* DROPDOWN */
+
 .dropdown{
 position:relative;
 display:inline-block;
@@ -44,6 +71,7 @@ cursor:pointer;
 .dropdown-content{
 display:none;
 position:absolute;
+top:100%;
 background:#12161d;
 min-width:160px;
 border:1px solid #1e2530;
@@ -66,16 +94,20 @@ color:white;
 .dropdown:hover .dropdown-content{
 display:block;
 }
+
 /* BANNER */
 
-.banner{
+.banner,.banner2
+.banner1{
 position:relative;
 width:100%;
 height:500px;
 overflow:hidden;
 }
 
-.banner img{
+.banner img,
+.banner2 img,
+.banner1 img{
 width:100%;
 height:100%;
 object-fit:cover;
@@ -83,7 +115,8 @@ object-fit:cover;
 
 /* ADMIN BANNER PANEL */
 
-#bannerAdmin{
+#bannerAdmin,
+#bannerAdmin1{
 position:absolute;
 bottom:20px;
 left:20px;
@@ -94,7 +127,8 @@ z-index:10;
 display:none;
 }
 
-#bannerAdmin input{
+#bannerAdmin input,
+#bannerAdmin1 input{
 margin:0;
 margin-right:10px;
 }
@@ -161,14 +195,19 @@ tr:hover{
 background:#1b2230;
 }
 
+/* TEAM CELL */
+
+td img.logo{
+margin-right:8px;
+vertical-align:middle;
+}
+
 /* TEAM LOGO */
 
 .logo{
 width:30px;
 height:30px;
 object-fit:contain;
-margin-right:8px;
-vertical-align:middle;
 }
 
 /* TOP RANK COLORS */

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>MSC AT EWC</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="navbar">
+
+<div>MSC AT EWC - FB: MỜ LỜ THẬT LOST TEACH</div>
+
+<div class="nav-links">
+
+<a href="MSCatEWC.html" class="msc-btn">MSC</a>
+<a href="M8.html" class="mseries-btn">M8</a>
+
+<a href="MPLID.html">MPL ID</a>
+<a href="MPLPH.html">MPL PH</a>
+<a href="MPLMY.html">MPL MY</a>
+
+<div class="dropdown">
+
+<a class="dropbtn">MCT SERIES ▾</a>
+
+<div class="dropdown-content">
+
+<a href="India.html">India</a>
+<a href="EECA.html">EECA</a>
+<a href="MCTSEA.html">MCT SEA</a>
+<a href="MCTEMEA.html">MCT EMEA</a>
+<a href="MCTAMER.html">MCT AMER</a>
+<a href="MCTEA.html">MCT EA</a>
+
+</div>
+</div>
+
+<a href="rankingglobal.html">Global Ranking</a>
+
+</div>
+</div>
+
+
+
+<div class="banner1">
+
+<img id="bannerImg1">
+
+<div id="bannerAdmin1">
+
+<input type="file" id="bannerUpload1">
+<button onclick="uploadBanner()">Upload Banner</button>
+
+</div>
+
+</div>
+
+
+<div class="container">
+
+<h2>Global Ranking</h2>
+
+<div id="adminPanel">
+
+<input id="teamInput" placeholder="Type team name">
+
+<img id="teamLogo" class="logo" style="width:50px;height:50px">
+
+<span id="teamScore"></span>
+
+<br><br>
+
+<button onclick="addTeam()">Add Team</button>
+
+</div>
+
+<table>
+
+<tr>
+<th>Rank</th>
+<th>Team</th>
+<th>Base Score</th>
+<th>Win</th>
+<th>Lose</th>
+<th>Winrate</th>
+<th>Bonus</th>
+<th>Placement</th>
+<th>Current Score</th>
+<th id="actionHeader">Action</th>
+</tr>
+
+<tbody id="rank"></tbody>
+
+</table>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyAwv0kDiGGvFcpZm2lKhD9Jq6dFoJXWGm0",
+authDomain: "global-power-ranking.firebaseapp.com",
+databaseURL: "https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId: "global-power-ranking",
+storageBucket: "global-power-ranking.firebasestorage.app",
+messagingSenderId: "382870176620",
+appId: "1:382870176620:web:2223021ac756c798a2e949"
+
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+
+/* ADMIN CHECK */
+
+let isAdmin = localStorage.getItem("login") === "true";
+
+if(isAdmin){
+document.getElementById("bannerAdmin1").style.display="block";
+}else{
+document.getElementById("bannerAdmin1").style.display="none";
+document.getElementById("adminPanel").style.display="none";
+document.getElementById("actionHeader").style.display="none";
+}
+
+
+/* BANNER UPLOAD */
+
+window.uploadBanner=function(){
+
+if(!isAdmin) return;
+
+let file=document.getElementById("bannerUpload1").files[0];
+if(!file) return;
+
+let reader=new FileReader();
+
+reader.onload=function(e){
+
+set(ref(db,"site/banner1"),{
+img:e.target.result
+})
+
+}
+
+reader.readAsDataURL(file);
+
+}
+
+
+/* LOAD BANNER */
+
+onValue(ref(db,"site/banner1"),(snapshot)=>{
+
+let data=snapshot.val();
+if(!data) return;
+
+document.getElementById("bannerImg1").src=data.img;
+
+});
+
+
+/* PLACEMENT POINTS */
+
+const placementPoints = {
+
+Champion:2500,
+Runnerup:1400,
+Top3:1350,
+Top4:1300,
+Top8:1200,
+Top12:1000,
+Top16:800,
+Top17:500,
+Top19:300,
+Top21:200,
+Top23:100,
+Top25:0
+
+}
+
+
+/* TOURNAMENT LIST */
+
+const tournaments=[
+
+"tour1","tour2","tour3",
+"eeca","india","thai","myanmar","vn","kh","lao","sg",
+"mena","weu",
+"mtc",
+"latam","usa","na",
+"cn","jp","kr","mgl",
+"regional"
+
+];
+
+let teamResource={};
+
+
+/* LOAD TEAM DATA */
+
+tournaments.forEach(name=>{
+
+onValue(ref(db,name),(snapshot)=>{
+
+let data=snapshot.val();
+if(!data) return;
+
+Object.values(data).forEach(t=>{
+
+if(!teamResource[t.team]){
+
+teamResource[t.team]={
+
+logo:t.logo,
+score:0
+
+};
+
+}
+
+teamResource[t.team].score += Number(t.score) || 0;
+
+})
+
+})
+
+});
+
+
+/* AUTO TEAM INFO */
+
+document.getElementById("teamInput").addEventListener("input",function(){
+
+let team=this.value;
+let data=teamResource[team];
+
+if(data){
+
+document.getElementById("teamLogo").src=data.logo;
+document.getElementById("teamScore").innerText="Base Score: "+data.score;
+
+}
+
+});
+
+
+/* ADD TEAM */
+
+window.addTeam=function(){
+
+if(!isAdmin) return;
+
+let team=document.getElementById("teamInput").value;
+let data=teamResource[team];
+
+if(!team || !data){
+
+alert("Team not found");
+return;
+
+}
+
+set(ref(db,"globalRanking/"+team),{
+
+team:team,
+logo:data.logo,
+baseScore:data.score,
+win:0,
+lose:0,
+bonus:0,
+placement:""
+
+});
+
+};
+
+
+/* LOAD RANKING */
+
+onValue(ref(db,"globalRanking"),(snapshot)=>{
+
+let data=snapshot.val();
+if(!data) return;
+
+let teams=Object.values(data);
+
+teams.forEach(t=>{
+
+let placementScore = placementPoints[t.placement] || 0;
+
+t.currentScore =
+Number(t.baseScore)
++ Number(t.bonus||0)
++ placementScore;
+
+});
+
+teams.sort((a,b)=>b.currentScore-a.currentScore);
+
+let html="";
+
+teams.forEach((t,i)=>{
+
+let win=t.win||0;
+let lose=t.lose||0;
+
+let rate="0";
+
+if(win+lose>0){
+rate=(win/(win+lose)).toFixed(3);
+}
+
+html+=`
+
+<tr>
+
+<td>${i+1}</td>
+
+<td>
+<img class="logo" src="${t.logo}" onerror="this.src='https://via.placeholder.com/30'">
+${t.team}
+</td>
+
+<td>${t.baseScore}</td>
+
+<td>${win}</td>
+<td>${lose}</td>
+
+<td>${rate}</td>
+
+<td>${t.bonus||0}</td>
+
+<td>${t.placement||""}</td>
+
+<td>${t.currentScore}</td>
+
+<td>
+
+${isAdmin ? `
+<button onclick="editTeam('${t.team}')">Edit</button>
+<button onclick="deleteTeam('${t.team}')">Delete</button>
+` : ""}
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById("rank").innerHTML=html;
+
+});
+
+
+/* EDIT TEAM */
+
+window.editTeam=function(team){
+
+if(!isAdmin) return;
+
+let win=parseInt(prompt("Win"))||0;
+let lose=parseInt(prompt("Lose"))||0;
+let bonus=parseInt(prompt("Bonus"))||0;
+let placement=prompt("Placement (Champion, Runnerup, Top3...)")||"";
+
+set(ref(db,"globalRanking/"+team+"/win"),win);
+set(ref(db,"globalRanking/"+team+"/lose"),lose);
+set(ref(db,"globalRanking/"+team+"/bonus"),bonus);
+set(ref(db,"globalRanking/"+team+"/placement"),placement);
+
+};
+
+
+/* DELETE TEAM */
+
+window.deleteTeam=function(team){
+
+if(!isAdmin) return;
+
+if(confirm("Delete team?")){
+remove(ref(db,"globalRanking/"+team));
+}
+
+};
+
+</script>
+
+</body>
+</html>
