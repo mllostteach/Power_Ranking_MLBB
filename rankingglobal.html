@@ -74,20 +74,31 @@ animation:down 0.5s;
 <div>GLOBAL POWER RANKING</div>
 
 <div class="nav-links">
-<a href="MSCatEWC.html">MSC</a>
-<a href="M8.html">M8</a>
+
+<a href="MSCatEWC.html" class="msc-btn">MSC</a>
+<a href="M8.html" class="mseries-btn">M8</a>
+
+<a href="MPLID.html">MPL ID</a>
+<a href="MPLPH.html">MPL PH</a>
+<a href="MPLMY.html">MPL MY</a>
 
 <div class="dropdown">
+
 <a class="dropbtn">MCT SERIES ▾</a>
+
 <div class="dropdown-content">
-<a href="MCTSEA.html">SEA</a>
-<a href="MCTEMEA.html">EMEA</a>
-<a href="MCTAMER.html">AMER</a>
-<a href="MCTEA.html">EA</a>
+
+<a href="India.html">India</a>
+<a href="EECA.html">EECA</a>
+<a href="MCTSEA.html">MCT SEA</a>
+<a href="MCTEMEA.html">MCT EMEA</a>
+<a href="MCTAMER.html">MCT AMER</a>
+<a href="MCTEA.html">MCT EA</a>
+
 </div>
 </div>
 
-<a href="rankingglobal.html">Global</a>
+<a href="rankingglobal.html">Global Ranking</a>
 </div>
 </div>
 
@@ -109,6 +120,7 @@ animation:down 0.5s;
 <button class="mode-btn" onclick="loadMode('msc', this)">MSC</button>
 <button class="mode-btn" onclick="loadMode('split2', this)">Split 2</button>
 <button class="mode-btn" onclick="loadMode('m8', this)">M8</button>
+<button class="mode-btn" id="lockBtn" onclick="toggleLock()">🔓 Chưa chốt</button>
 </div>
 
 <table>
@@ -132,6 +144,23 @@ const app = initializeApp({
 databaseURL:"https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app"
 });
 const db = getDatabase(app);
+
+/* ================= ADMIN CHECK ================= */
+const ADMIN_KEY = "123"; // đổi key tại đây
+
+function checkAdmin(){
+const params = new URLSearchParams(window.location.search);
+return params.get("admin") === ADMIN_KEY;
+}
+
+let isAdmin = checkAdmin();
+
+/* ẨN NÚT nếu không phải admin */
+window.addEventListener("DOMContentLoaded", ()=>{
+if(!isAdmin){
+document.getElementById("lockBtn").style.display = "none";
+}
+});
 
 /* ===== SAFE LOGO ===== */
 function safeLogo(logo){
@@ -175,7 +204,13 @@ btn.innerText=isLocked
 btn.classList.toggle("active",isLocked);
 }
 
+/* ===== TOGGLE LOCK (ĐÃ CHẶN ADMIN) ===== */
 window.toggleLock = async function(){
+
+if(!isAdmin){
+alert("Bạn không có quyền!");
+return;
+}
 
 isLocked = !isLocked;
 
@@ -190,7 +225,7 @@ let filtered = {};
 Object.entries(snap.val() || {}).forEach(([key,data])=>{
 if(!data) return;
 
-/* dùng cùng filter như updateRanking */
+/* FILTER */
 if(currentMode==="msc" && !["tour1","tour2","tour3",
 "eeca","india","thai","myanmar","vn","kh","lao","sg",
 "mena","weu","mtc","latam","usa","na",
@@ -222,7 +257,7 @@ currentMode = mode;
 allData = {};
 prevRanks = {};
 
-/* 🔥 STOP OLD LISTENER */
+/* STOP LISTENER */
 if(unsubscribe){
   unsubscribe();
   unsubscribe = null;
@@ -237,7 +272,7 @@ document.getElementById("title").innerText="Global Ranking - "+mode.toUpperCase(
 /* LOAD LOCK */
 await loadLock();
 
-/* 🔒 NẾU LOCK → LUÔN LOAD SNAPSHOT */
+/* LOAD SNAPSHOT nếu locked */
 if(isLocked){
   let snap = await get(ref(db,"globalSnapshot/"+mode));
   allData = snap.val() || {};
@@ -245,7 +280,7 @@ if(isLocked){
   return;
 }
 
-/* 🔓 REALTIME CHO TẤT CẢ MODE */
+/* REALTIME */
 unsubscribe = onValue(ref(db),snap=>{
   allData = snap.val() || {};
   updateRanking();
@@ -260,7 +295,6 @@ let map={};
 Object.entries(allData).forEach(([key,data])=>{
 if(!data) return;
 
-/* FILTER giữ nguyên của bạn */
 if(currentMode==="msc" && !["tour1","tour2","tour3",
 "eeca","india","thai","myanmar","vn","kh","lao","sg",
 "mena","weu","mtc","latam","usa","na",
@@ -280,20 +314,16 @@ Object.values(data).forEach(t=>{
 
 if(!t || !t.team) return;
 
-/* INIT */
 if(!map[t.team]){
 map[t.team]={team:t.team,logo:"",score:0,trophies:[]}
 }
 
-/* 🔥 CHỈ UPDATE LOGO KHI HỢP LỆ */
 if(t.logo && t.logo.trim() !== ""){
 map[t.team].logo = t.logo;
 }
 
-/* SCORE */
 map[t.team].score += Number(t.score)||0;
 
-/* TROPHY */
 if(t.placement) map[t.team].trophies.push(t.placement);
 
 });
@@ -315,7 +345,6 @@ if(newRank>oldRank) cls="rank-down";
 
 prevRanks[t.team]=newRank;
 
-/* 🔥 FALLBACK LOGO */
 let logo = t.logo && t.logo.trim() !== ""
 ? t.logo
 : "https://via.placeholder.com/40?text=Logo";
@@ -338,6 +367,7 @@ onerror="this.src='https://via.placeholder.com/40?text=Logo'">
 
 document.getElementById("rank").innerHTML=html;
 }
+
 loadMode("split1", document.querySelector(".mode-btn"));
 
 </script>
