@@ -4,12 +4,95 @@
 <head>
 <title>MCT EA</title>
 <link rel="stylesheet" href="style.css">
+
+<style>
+.league-buttons{
+  display:flex;
+  gap:10px;
+  margin:15px 0;
+}
+
+.league-buttons{
+  display:flex;
+  gap:12px;
+  margin:15px 0;
+}
+
+.league-buttons{
+  display:flex;
+  gap:10px;
+  margin:15px 0;
+  justify-content:center; /* căn giữa */
+}
+
+.flag-btn{
+  position:relative;
+  width:150px;
+  height:85px;
+  border-radius:12px;
+  overflow:hidden;
+  text-decoration:none;
+  color:white;
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+/* ảnh cờ */
+.flag-btn img{
+  position:absolute;
+  width:100%;
+  height:100%;
+  object-fit:cover; /* giữ full khung */
+  top:0;
+  left:0;
+  filter:brightness(0.55); /* tối đều */
+  transition:0.3s;
+}
+
+/* overlay fix đều màu */
+.flag-btn::after{
+  content:"";
+  position:absolute;
+  width:100%;
+  height:100%;
+  top:0;
+  left:0;
+  background:rgba(0,0,0,0.25); /* lớp tối đều */
+}
+
+/* chữ */
+.flag-btn span{
+  position:relative;
+  z-index:2;
+  font-size:15px;
+  text-align:center;
+  line-height:1.2;
+}
+
+/* hover đẹp hơn */
+.flag-btn:hover img{
+  transform:scale(1.08);
+  filter:brightness(0.7);
+}
+
+table{
+  width:100%;
+  margin-top:20px;
+}
+
+th,td{
+  padding:10px;
+  text-align:center;
+}
+</style>
+
 </head>
 
 <body>
 
 <div class="navbar">
-
 <div>MCT EA</div>
 
 <div class="nav-links">
@@ -22,18 +105,14 @@
 <a href="MPLMY.html">MPL MY</a>
 
 <div class="dropdown">
-
 <a class="dropbtn">MCT SERIES ▾</a>
-
 <div class="dropdown-content">
-
 <a href="India.html">India</a>
 <a href="EECA.html">EECA</a>
 <a href="MCTSEA.html">MCT SEA</a>
 <a href="MCTEMEA.html">MCT EMEA</a>
 <a href="MCTAMER.html">MCT AMER</a>
 <a href="MCTEA.html">MCT EA</a>
-
 </div>
 </div>
 
@@ -42,38 +121,56 @@
 </div>
 </div>
 
-
 <div class="container">
 
 <h2>MCT EA - FB: MỜ LỜ THẬT LOST TEACH</h2>
-<h3>MCT EA là khu vực gồm các giải : <a href="china.html" style="color: white;">China Master</a>    <a href="JP.html" style="color: white;">Nhật Bản</a>    <a href="MGL.html" style="color: white;">ESN</a>    <a href="KR.html" style="color: white;">Hàn Quốc</a>    </h3>
+<h3>MCT EA LÀ GIẢI ĐẤU CỦA 4 KHU VỰC LÀ TRUNG QUỐC, HÀN QUỐC, NHẬT BẢN VÀ MÔNG CỔ
+</h3>
+<div class="league-buttons">
 
-<input id="search" placeholder="Search region..." onkeyup="searchTeam()">
+  <a href="china.html" class="flag-btn">
+    <img src="https://flagcdn.com/w320/cn.png">
+    <span>China Master</span>
+  </a>
 
-<!-- ADMIN PANEL -->
+  <a href="JP.html" class="flag-btn">
+    <img src="https://flagcdn.com/w320/jp.png">
+    <span>Nhật Bản</span>
+  </a>
 
-<div class="card" id="adminPanel">
+  <a href="MGL.html" class="flag-btn">
+    <img src="https://flagcdn.com/w320/mn.png">
+    <span>ESN</span>
+  </a>
 
-<input id="team" placeholder="Team name">
-<input type="file" id="logo" accept="image/*">
-<input id="win" placeholder="Win">
-<input id="lose" placeholder="Lose">
-
-<button onclick="add()">Add Team</button>
+  <a href="KR.html" class="flag-btn">
+    <img src="https://flagcdn.com/w320/kr.png">
+    <span>Hàn Quốc</span>
+  </a>
 
 </div>
 
-<table>
+<input id="search" placeholder="Search team..." onkeyup="searchTeam()">
 
+<!-- ADMIN -->
+<div class="card" id="adminPanel">
+<input id="team" placeholder="Team name">
+<input id="win" placeholder="Win">
+<input id="lose" placeholder="Lose">
+<button onclick="add()">Add Team</button>
+</div>
+
+<table>
 <tr>
-<th>Region</th>
-<th>Thứ Hạng giải quốc tế gần nhất</th>
-<th>Điểm cộng thêm</th>
+<th>Team</th>
+<th>Điểm quốc nội</th>
+<th>Win</th>
+<th>Lose</th>
+<th>Bonus</th>
+<th>Score</th>
 <th>Action</th>
 </tr>
-
 <tbody id="list"></tbody>
-
 </table>
 
 </div>
@@ -81,175 +178,167 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, set, remove, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 /* Firebase */
-
 const firebaseConfig = {
   apiKey: "AIzaSyAwv0kDiGGvFcpZm2lKhD9Jq6dFoJXWGm0",
   authDomain: "global-power-ranking.firebaseapp.com",
   databaseURL: "https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "global-power-ranking",
-  storageBucket: "global-power-ranking.firebasestorage.app",
-  messagingSenderId: "382870176620",
-  appId: "1:382870176620:web:2223021ac756c798a2e949",
-  measurementId: "G-6WDYMQNLBJ"
+  projectId: "global-power-ranking"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* kiểm tra admin */
-
+/* ADMIN */
 let isAdmin = localStorage.getItem("login") === "true";
-
 if(!isAdmin){
-document.getElementById("adminPanel").style.display="none";
+  document.getElementById("adminPanel").style.display="none";
 }
 
-/* thêm team */
+/* 🔍 TÌM TEAM TRONG 4 DB */
+async function findTeam(teamName){
 
-window.add = function(){
+  const regions = ["cn","kr","jp","mgl"];
 
-if(!isAdmin) return;
+  for(let r of regions){
+    let snapshot = await get(child(ref(db), r + "/" + teamName));
+    if(snapshot.exists()){
+      return snapshot.val();
+    }
+  }
 
-let team=document.getElementById("team").value.trim()
-let win=parseInt(document.getElementById("win").value)
-let lose=parseInt(document.getElementById("lose").value)
-let file=document.getElementById("logo").files[0]
-
-if(!team || isNaN(win) || isNaN(lose)){
-alert("Vui lòng nhập đầy đủ thông tin")
-return
+  return null;
 }
 
-let score=(win*300)-(lose*100)+400
+/* ➕ ADD */
+window.add = async function(){
 
-function save(logo){
+  if(!isAdmin) return;
 
-set(ref(db,"EA/"+team),{
-team,
-logo,
-win,
-lose,
-})
+  let team = document.getElementById("team").value.trim();
+  let win = parseInt(document.getElementById("win").value) || 0;
+  let lose = parseInt(document.getElementById("lose").value) || 0;
+
+  if(!team){
+    alert("Nhập tên team!");
+    return;
+  }
+
+  let data = await findTeam(team);
+
+  if(!data){
+    alert("Không tìm thấy team trong CN/KR/JP/MGL");
+    return;
+  }
+
+  let domestic = data.score || 0;
+  let bonus = 0;
+
+  let score = domestic + (win*20) - (lose*30) + bonus;
+
+  set(ref(db,"EA/"+team),{
+    team,
+    logo: data.logo || "",
+    domestic,
+    win,
+    lose,
+    bonus,
+    score
+  });
 
 }
 
-if(file){
-
-let reader=new FileReader()
-
-reader.onload=function(e){
-save(e.target.result)
-}
-
-reader.readAsDataURL(file)
-
-}else{
-
-save("")
-
-}
-
-document.getElementById("team").value=""
-document.getElementById("logo").value=""
-document.getElementById("win").value=""
-document.getElementById("lose").value=""
-
-}
-
-/* load realtime */
-
-const teamsRef = ref(db,"EA")
+/* 🔄 LOAD */
+const teamsRef = ref(db,"EA");
 
 onValue(teamsRef,(snapshot)=>{
 
-let data=snapshot.val()
+  let data = snapshot.val();
+  if(!data) return;
 
-if(!data) return
+  let html="";
 
-let html=""
+  Object.values(data).forEach((t)=>{
 
-Object.values(data).forEach((t)=>{
+    html+=`
+    <tr>
 
-html+=`
+    <td>
+      <img src="${t.logo}" width="30" onerror="this.src='https://via.placeholder.com/30'">
+      ${t.team}
+    </td>
 
-<tr>
+    <td>${t.domestic}</td>
+    <td>${t.win}</td>
+    <td>${t.lose}</td>
+    <td>${t.bonus}</td>
+    <td><b>${t.score}</b></td>
 
-<td>
-<img class="logo" src="${t.logo}" onerror="this.src='https://via.placeholder.com/30'">
-${t.team}
-</td>
+    <td>
+    ${isAdmin ? `
+      <button onclick="edit('${t.team}')">Edit</button>
+      <button onclick="removeTeam('${t.team}')">Delete</button>
+    ` : ""}
+    </td>
 
-<td>${t.win}</td>
-<td>${t.lose}</td>
+    </tr>
+    `;
+  });
 
+  document.getElementById("list").innerHTML=html;
 
-<td>
+});
 
-${isAdmin ? `
-<button onclick="edit('${t.team}')">Edit</button>
-<button onclick="removeTeam('${t.team}')">Delete</button>
-` : ""}
-
-</td>
-
-</tr>
-
-`
-
-})
-
-document.getElementById("list").innerHTML=html
-
-})
-
-/* edit */
-
+/* ✏️ EDIT */
 window.edit = function(team){
 
-if(!isAdmin) return;
+  if(!isAdmin) return;
 
-let win=prompt("Win")
-let lose=prompt("Lose")
+  let win = parseInt(prompt("Win")) || 0;
+  let lose = parseInt(prompt("Lose")) || 0;
+  let bonus = parseInt(prompt("Bonus")) || 0;
 
-win=parseInt(win)
-lose=parseInt(lose)
+  let teamRef = ref(db,"EA/"+team);
 
-if(isNaN(win)||isNaN(lose)) return
+  get(teamRef).then((snap)=>{
 
-let score=(win*300)-(lose*100)+400
+    let t = snap.val();
 
-set(ref(db,"EA/"+team+"/win"),win)
-set(ref(db,"EA/"+team+"/lose"),lose)
-set(ref(db,"EA/"+team+"/score"),score)
+    let score = t.domestic + (win*20) - (lose*30) + bonus;
+
+    set(teamRef,{
+      ...t,
+      win,
+      lose,
+      bonus,
+      score
+    });
+
+  });
 
 }
 
-/* delete */
-
+/* ❌ DELETE */
 window.removeTeam = function(team){
 
-if(!isAdmin) return;
+  if(!isAdmin) return;
 
-if(confirm("Xóa đội này?")){
-remove(ref(db,"EA/"+team))
+  if(confirm("Xóa team?")){
+    remove(ref(db,"EA/"+team));
+  }
+
 }
 
-}
-
-/* search */
-
+/* 🔍 SEARCH */
 window.searchTeam = function(){
 
-let key=document.getElementById("search").value.toLowerCase()
+  let key = document.getElementById("search").value.toLowerCase();
 
-document.querySelectorAll("#list tr").forEach(row=>{
-
-row.style.display=row.innerText.toLowerCase().includes(key) ? "" : "none"
-
-})
+  document.querySelectorAll("#list tr").forEach(row=>{
+    row.style.display = row.innerText.toLowerCase().includes(key) ? "" : "none";
+  });
 
 }
 
@@ -257,3 +346,4 @@ row.style.display=row.innerText.toLowerCase().includes(key) ? "" : "none"
 
 </body>
 </html>
+

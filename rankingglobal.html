@@ -1,75 +1,125 @@
+
+
 <!DOCTYPE html>
 <html>
 
 <head>
 <title>Global Ranking</title>
 <link rel="stylesheet" href="style.css">
+
+<style>
+
+.mode-bar{
+display:flex;
+gap:12px;
+margin:15px 0;
+flex-wrap:wrap;
+}
+
+.mode-btn{
+padding:8px 18px;
+border-radius:999px;
+border:1px solid #2a2a2a;
+background:#111;
+color:#aaa;
+cursor:pointer;
+transition:0.3s;
+}
+
+.mode-btn.active{
+color:#fff;
+background:linear-gradient(90deg,#00c6ff,#0072ff);
+box-shadow:0 0 10px rgba(0,150,255,0.5);
+}
+
+.logo{
+width:38px;
+height:38px;
+object-fit:contain;
+background:#111;
+border-radius:6px;
+padding:2px;
+flex-shrink:0;
+}
+
+tr{ transition:all 0.5s ease; }
+
+.rank-up{
+background:rgba(0,255,0,0.15);
+animation:up 0.5s;
+}
+
+.rank-down{
+background:rgba(255,0,0,0.15);
+animation:down 0.5s;
+}
+
+@keyframes up{
+0%{transform:translateY(15px);}
+100%{transform:translateY(0);}
+}
+
+@keyframes down{
+0%{transform:translateY(-15px);}
+100%{transform:translateY(0);}
+}
+
+</style>
+
 </head>
 
 <body>
 
 <div class="navbar">
-
 <div>GLOBAL POWER RANKING</div>
+
 <div class="nav-links">
-
-<a href="MSCatEWC.html" class="msc-btn">MSC</a>
-<a href="M8.html" class="mseries-btn">M8</a>
-
-<a href="MPLID.html">MPL ID</a>
-<a href="MPLPH.html">MPL PH</a>
-<a href="MPLMY.html">MPL MY</a>
+<a href="MSCatEWC.html">MSC</a>
+<a href="M8.html">M8</a>
 
 <div class="dropdown">
-
 <a class="dropbtn">MCT SERIES ▾</a>
-
 <div class="dropdown-content">
-
-<a href="India.html">India</a>
-<a href="EECA.html">EECA</a>
-<a href="MCTSEA.html">MCT SEA</a>
-<a href="MCTEMEA.html">MCT EMEA</a>
-<a href="MCTAMER.html">MCT AMER</a>
-<a href="MCTEA.html">MCT EA</a>
-
+<a href="MCTSEA.html">SEA</a>
+<a href="MCTEMEA.html">EMEA</a>
+<a href="MCTAMER.html">AMER</a>
+<a href="MCTEA.html">EA</a>
 </div>
 </div>
 
-<a href="rankingglobal.html">Global Ranking</a>
-
+<a href="rankingglobal.html">Global</a>
 </div>
 </div>
-
 
 <div class="banner">
-
 <img id="bannerImg">
 
 <div id="bannerAdmin">
-
 <input type="file" id="bannerUpload">
 <button onclick="uploadBanner()">Upload Banner</button>
-
 </div>
-
 </div>
 
 <div class="container">
 
-<h2>Global Ranking</h2>
+<h2 id="title">Global Ranking</h2>
+
+<div class="mode-bar">
+<button class="mode-btn active" onclick="loadMode('split1', this)">Split 1</button>
+<button class="mode-btn" onclick="loadMode('msc', this)">MSC</button>
+<button class="mode-btn" onclick="loadMode('split2', this)">Split 2</button>
+<button class="mode-btn" onclick="loadMode('m8', this)">M8</button>
+<button class="mode-btn" id="lockBtn" onclick="toggleLock()">🔓 Chưa chốt</button>
+</div>
 
 <table>
-
 <tr>
 <th>Rank</th>
 <th>Team</th>
 <th>Trophies</th>
 <th>Total Points</th>
 </tr>
-
 <tbody id="rank"></tbody>
-
 </table>
 
 </div>
@@ -77,268 +127,236 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, onValue, get, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-/* Firebase */
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAwv0kDiGGvFcpZm2lKhD9Jq6dFoJXWGm0",
-  authDomain: "global-power-ranking.firebaseapp.com",
-  databaseURL: "https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "global-power-ranking",
-  storageBucket: "global-power-ranking.firebasestorage.app",
-  messagingSenderId: "382870176620",
-  appId: "1:382870176620:web:2223021ac756c798a2e949"
-};
-
-const app = initializeApp(firebaseConfig);
+const app = initializeApp({
+databaseURL:"https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app"
+});
 const db = getDatabase(app);
 
-
-/* admin check */
-
-let isAdmin = localStorage.getItem("login") === "true";
-
-if(isAdmin){
-document.getElementById("bannerAdmin").style.display="block";
-}else{
-document.getElementById("bannerAdmin").style.display="none";
+/* ===== SAFE LOGO ===== */
+function safeLogo(logo){
+if(!logo || logo==="undefined" || logo==="null"){
+return "https://via.placeholder.com/40?text=Logo";
+}
+return logo;
 }
 
-
-/* banner upload */
-
-window.uploadBanner = function(){
-
-if(!isAdmin) return;
-
+/* ===== BANNER ===== */
+window.uploadBanner=function(){
 let file=document.getElementById("bannerUpload").files[0];
 if(!file) return;
 
 let reader=new FileReader();
-
-reader.onload=function(e){
-
-set(ref(db,"site/banner"),{
-img:e.target.result
-})
-
+reader.onload=e=>{
+set(ref(db,"site/banner"),{img:e.target.result});
+}
+reader.readAsDataURL(file);
 }
 
-reader.readAsDataURL(file)
-
-}
-
-
-/* banner realtime */
-
-const bannerRef = ref(db,"site/banner");
-
-onValue(bannerRef,(snapshot)=>{
-
-let data=snapshot.val();
-
-if(!data) return;
-
-document.getElementById("bannerImg").src=data.img;
-
+onValue(ref(db,"site/banner"),snap=>{
+if(snap.val()) document.getElementById("bannerImg").src=snap.val().img;
 });
 
+/* ===== STATE ===== */
+let allData={}, currentMode="split1", isLocked=false, prevRanks={}, unsubscribe=null;
 
-/* LIST TOURNAMENT */
+/* ===== LOCK ===== */
+async function loadLock(){
+let snap=await get(ref(db,"globalLock/"+currentMode));
+isLocked=snap.exists()?snap.val():false;
+updateLockUI();
+}
 
-const tournaments = [
+function updateLockUI(){
+let btn=document.getElementById("lockBtn");
+btn.innerText=isLocked
+?`🔒 ${currentMode.toUpperCase()} Đã chốt`
+:`🔓 ${currentMode.toUpperCase()} Chưa chốt`;
+btn.classList.toggle("active",isLocked);
+}
 
-"tour1",
-"tour2",
-"tour3",
+window.toggleLock = async function(){
 
-"eeca",
-"india",
-"thai",
-"myanmar",
-"vn",
-"kh",
-"lao",
-"sg",
+isLocked = !isLocked;
 
-"mena",
-"weu",
+await set(ref(db,"globalLock/"+currentMode), isLocked);
 
-"mtc",
+if(isLocked){
 
-"latam",
-"usa",
-"na",
+const snap = await get(ref(db));
 
-"cn",
-"jp",
-"kr",
-"mgl",
-"regional",
+let filtered = {};
 
-/* INTERNATIONAL */
+Object.entries(snap.val() || {}).forEach(([key,data])=>{
+if(!data) return;
 
-"msc",
-"mseries"
+/* dùng cùng filter như updateRanking */
+if(currentMode==="msc" && !["tour1","tour2","tour3",
+"eeca","india","thai","myanmar","vn","kh","lao","sg",
+"mena","weu","mtc","latam","usa","na",
+"cn","jp","kr","mgl","regional","msc"].includes(key)) return;
 
-];
+if(currentMode==="split2" && !["tour1","tour2","tour3",
+"eeca","india","thai","myanmar","vn","kh","lao","sg",
+"mena","weu","mtc","latam","usa","na",
+"cn","jp","kr","mgl","regional","msc"].includes(key)) return;
 
+if(currentMode==="m8" && !["tour1","tour2","tour3",
+"eeca","india","thai","myanmar","vn","kh","lao","sg",
+"mena","weu","mtc","latam","usa","na",
+"cn","jp","kr","mgl","regional","msc","mseries"].includes(key)) return;
 
-/* DATA STORAGE */
+filtered[key] = data;
+});
 
-let allData = {};
+await set(ref(db,"globalSnapshot/"+currentMode), filtered);
+}
 
+updateLockUI();
+}
 
-/* UPDATE RANKING */
+/* ===== LOAD MODE ===== */
+window.loadMode = async function(mode, el){
 
+currentMode = mode;
+allData = {};
+prevRanks = {};
+
+/* 🔥 STOP OLD LISTENER */
+if(unsubscribe){
+  unsubscribe();
+  unsubscribe = null;
+}
+
+/* UI */
+document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));
+if(el) el.classList.add("active");
+
+document.getElementById("title").innerText="Global Ranking - "+mode.toUpperCase();
+
+/* LOAD LOCK */
+await loadLock();
+
+/* 🔒 NẾU LOCK → LUÔN LOAD SNAPSHOT */
+if(isLocked){
+  let snap = await get(ref(db,"globalSnapshot/"+mode));
+  allData = snap.val() || {};
+  updateRanking();
+  return;
+}
+
+/* 🔓 REALTIME CHO TẤT CẢ MODE */
+unsubscribe = onValue(ref(db),snap=>{
+  allData = snap.val() || {};
+  updateRanking();
+});
+}
+
+/* ===== UPDATE ===== */
 function updateRanking(){
 
 let map={};
 
-function addData(data){
-
+Object.entries(allData).forEach(([key,data])=>{
 if(!data) return;
+
+/* FILTER giữ nguyên của bạn */
+if(currentMode==="msc" && !["tour1","tour2","tour3",
+"eeca","india","thai","myanmar","vn","kh","lao","sg",
+"mena","weu","mtc","latam","usa","na",
+"cn","jp","kr","mgl","regional","msc"].includes(key)) return;
+
+if(currentMode==="split2" && !["tour1","tour2","tour3",
+"eeca","india","thai","myanmar","vn","kh","lao","sg",
+"mena","weu","mtc","latam","usa","na",
+"cn","jp","kr","mgl","regional","msc"].includes(key)) return;
+
+if(currentMode==="m8" && !["tour1","tour2","tour3",
+"eeca","india","thai","myanmar","vn","kh","lao","sg",
+"mena","weu","mtc","latam","usa","na",
+"cn","jp","kr","mgl","regional","msc","mseries"].includes(key)) return;
 
 Object.values(data).forEach(t=>{
 
+if(!t || !t.team) return;
+
+/* INIT */
 if(!map[t.team]){
-
-map[t.team]={
-team:t.team,
-logo:t.logo,
-score:0,
-trophies:[]
+map[t.team]={team:t.team,logo:"",score:0,trophies:[]}
 }
 
+/* 🔥 CHỈ UPDATE LOGO KHI HỢP LỆ */
+if(t.logo && t.logo.trim() !== ""){
+map[t.team].logo = t.logo;
 }
 
-/* cộng điểm */
+/* SCORE */
+map[t.team].score += Number(t.score)||0;
 
-map[t.team].score += Number(t.score) || 0;
+/* TROPHY */
+if(t.placement) map[t.team].trophies.push(t.placement);
 
-/* thêm danh hiệu nếu có */
+});
 
-if(t.placement){
-map[t.team].trophies.push(t.placement)
-}
+});
 
-})
-
-}
-
-Object.values(allData).forEach(d=>addData(d));
-
-let teams = Object.values(map);
-
-teams.sort((a,b)=>b.score-a.score);
+let teams=Object.values(map).sort((a,b)=>b.score-a.score);
 
 let html="";
 
 teams.forEach((t,i)=>{
 
-let rankClass="";
+let newRank=i+1;
+let oldRank=prevRanks[t.team]||newRank;
 
-if(i==0) rankClass="rank1";
-if(i==1) rankClass="rank2";
-if(i==2) rankClass="rank3";
-if(i==3) rankClass="rank4";
+let cls="";
+if(newRank<oldRank) cls="rank-up";
+if(newRank>oldRank) cls="rank-down";
 
-/* danh hiệu */
+prevRanks[t.team]=newRank;
 
-let trophies="";
-
-/* remove duplicate trophies */
-
-let uniqueTrophies = [...new Set(t.trophies)];
-
-uniqueTrophies.forEach(p=>{
-
-/* MSC */
-
-if(p=="1st MSC")
-trophies+=`<span class="gold">🥇 ${p}</span> `;
-
-else if(p=="2nd MSC")
-trophies+=`<span class="silver">🥈 ${p}</span> `;
-
-else if(p=="3rd MSC")
-trophies+=`<span class="bronze">🥉 ${p}</span> `;
-
-
-/* M-Series */
-
-else if(p=="1st M8")
-trophies+=`<span class="gold mseries">🥇 ${p}</span> `;
-
-else if(p=="2nd M8")
-trophies+=`<span class="silver mseries">🥈 ${p}</span> `;
-
-else if(p=="3rd M8")
-trophies+=`<span class="bronze mseries">🥉 ${p}</span> `;
-
-
-/* Regional Champion */
-
-else if(p.includes("Champion MPL") || p.includes("Champion MCT"))
-trophies+=`<span class="regional">🏆 ${p}</span> `;
-
-
-/* Regional Runner-up */
-
-else if(p.includes("Runner-up MPL") || p.includes("Runner-up MCT"))
-trophies+=`<span class="regional silver">🥈 ${p}</span> `;
-
-
-/* Other placements */
-
-else
-trophies+=`<span class="normal">${p}</span> `;
-
-});
+/* 🔥 FALLBACK LOGO */
+let logo = t.logo && t.logo.trim() !== ""
+? t.logo
+: "https://via.placeholder.com/40?text=Logo";
 
 html+=`
-
-<tr class="${rankClass}">
-
-<td>${i+1}</td>
-
-<td>
-<img class="logo" src="${t.logo}" onerror="this.src='https://via.placeholder.com/30'">
-${t.team}
+<tr class="${cls}">
+<td>${newRank}</td>
+<td style="display:flex;align-items:center;gap:8px;">
+<img class="logo"
+src="${logo}"
+onerror="this.src='https://via.placeholder.com/40?text=Logo'">
+<span>${t.team}</span>
 </td>
-
-<td>${trophies}</td>
-
-<td>${t.score}</td>
-
+<td>${[...new Set(t.trophies)].join(" ")}</td>
+<td><b>${t.score}</b></td>
 </tr>
-
-`
-
-})
-
-document.getElementById("rank").innerHTML=html;
-
-}
-
-/* LOAD ALL TOURNAMENT */
-
-tournaments.forEach(name=>{
-
-const tournamentRef = ref(db,name);
-
-onValue(tournamentRef,(snapshot)=>{
-
-allData[name] = snapshot.val();
-
-updateRanking();
-
-})
+`;
 
 });
+
+document.getElementById("rank").innerHTML=html;
+}
+loadMode("split1", document.querySelector(".mode-btn"));
 
 </script>
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

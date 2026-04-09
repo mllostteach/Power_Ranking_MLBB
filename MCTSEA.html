@@ -4,12 +4,78 @@
 <head>
 <title>MCT SEA</title>
 <link rel="stylesheet" href="style.css">
+
+<style>
+
+/* FLAG BUTTON */
+.league-buttons{
+  display:flex;
+  gap:10px;
+  margin:15px 0;
+  justify-content:center;
+}
+
+.flag-btn{
+  position:relative;
+  width:150px;
+  height:85px;
+  border-radius:12px;
+  overflow:hidden;
+  text-decoration:none;
+  color:white;
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.flag-btn img{
+  position:absolute;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  filter:brightness(0.55);
+}
+
+.flag-btn::after{
+  content:"";
+  position:absolute;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.25);
+}
+
+.flag-btn span{
+  position:relative;
+  z-index:2;
+  font-size:14px;
+}
+
+/* LOGO FIX */
+.logo{
+  width:40px;
+  height:40px;
+  object-fit:contain;
+}
+
+/* TABLE */
+table{
+  width:100%;
+  margin-top:20px;
+}
+
+th,td{
+  padding:10px;
+  text-align:center;
+}
+
+</style>
+
 </head>
 
 <body>
 
 <div class="navbar">
-
 <div>MCT SEA</div>
 
 <div class="nav-links">
@@ -42,38 +108,66 @@
 </div>
 </div>
 
-
 <div class="container">
 
 <h2>MCT SEA - FB: MỜ LỜ THẬT LOST TEACH</h2>
-<h3>MCT SEA là khu vực gồm các giải : <a href="MSLThai.html" style="color: white;">MSL Thái Lan</a>    <a href="MSLMyanmar.html" style="color: white;">MSL Myanmar</a>    <a href="VMC.html" style="color: white;">VMC</a>    <a href="MPLKM.html" style="color: white;">MPL Campuchia</a>    <a href="Lao.html" style="color: white;">Lào</a>   <a href="MPLSG.html" style="color: white;">MPL Singapore</a> </h3>
+<h3>MCT SEA - là giải đấu của các khu vực: Thái Lan, Myanmar, Việt Nam, Cambodia, Lào, Singapore và các đội MDL PH,ID và MY</h3>
+<!-- FLAGS -->
+<div class="league-buttons">
 
-<input id="search" placeholder="Search region..." onkeyup="searchTeam()">
+<a href="MSLThai.html" class="flag-btn">
+<img src="https://flagcdn.com/w320/th.png">
+<span>Thailand</span>
+</a>
 
-<!-- ADMIN PANEL -->
+<a href="MSLMyanmar.html" class="flag-btn">
+<img src="https://flagcdn.com/w320/mm.png">
+<span>Myanmar</span>
+</a>
 
-<div class="card" id="adminPanel">
+<a href="VMC.html" class="flag-btn">
+<img src="https://flagcdn.com/w320/vn.png">
+<span>Vietnam</span>
+</a>
 
-<input id="team" placeholder="Team name">
-<input type="file" id="logo" accept="image/*">
-<input id="win" placeholder="Win">
-<input id="lose" placeholder="Lose">
+<a href="MPLKM.html" class="flag-btn">
+<img src="https://flagcdn.com/w320/kh.png">
+<span>Cambodia</span>
+</a>
 
-<button onclick="add()">Add Team</button>
+<a href="Lao.html" class="flag-btn">
+<img src="https://flagcdn.com/w320/la.png">
+<span>Lao</span>
+</a>
+
+<a href="MPLSG.html" class="flag-btn">
+<img src="https://flagcdn.com/w320/sg.png">
+<span>Singapore</span>
+</a>
 
 </div>
 
-<table>
+<input id="search" placeholder="Search team..." onkeyup="searchTeam()">
 
+<!-- ADMIN -->
+<div class="card" id="adminPanel">
+<input id="team" placeholder="Team name">
+<input id="win" placeholder="Win">
+<input id="lose" placeholder="Lose">
+<button onclick="add()">Add Team</button>
+</div>
+
+<table>
 <tr>
-<th>Region</th>
-<th>Thứ Hạng giải quốc tế gần nhất</th>
-<th>Điểm cộng thêm</th>
+<th>Team</th>
+<th>Domestic</th>
+<th>Win</th>
+<th>Lose</th>
+<th>Bonus</th>
+<th>Score</th>
 <th>Action</th>
 </tr>
-
 <tbody id="list"></tbody>
-
 </table>
 
 </div>
@@ -81,176 +175,142 @@
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
-/* Firebase */
+import { getDatabase, ref, set, remove, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAwv0kDiGGvFcpZm2lKhD9Jq6dFoJXWGm0",
-  authDomain: "global-power-ranking.firebaseapp.com",
+  apiKey: "AIzaSy...",
   databaseURL: "https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "global-power-ranking",
-  storageBucket: "global-power-ranking.firebasestorage.app",
-  messagingSenderId: "382870176620",
-  appId: "1:382870176620:web:2223021ac756c798a2e949",
-  measurementId: "G-6WDYMQNLBJ"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* kiểm tra admin */
-
 let isAdmin = localStorage.getItem("login") === "true";
-
 if(!isAdmin){
 document.getElementById("adminPanel").style.display="none";
 }
 
-/* thêm team */
+/* 🔍 FIND TEAM */
+async function findTeam(teamName){
 
-window.add = function(){
+  const regions = ["thai","myanmar","vn","kh","lao","sg"];
 
-if(!isAdmin) return;
+  for(let r of regions){
+    let snapshot = await get(child(ref(db), r + "/" + teamName));
+    if(snapshot.exists()){
+      return snapshot.val();
+    }
+  }
 
-let team=document.getElementById("team").value.trim()
-let win=parseInt(document.getElementById("win").value)
-let lose=parseInt(document.getElementById("lose").value)
-let file=document.getElementById("logo").files[0]
-
-if(!team || isNaN(win) || isNaN(lose)){
-alert("Vui lòng nhập đầy đủ thông tin")
-return
+  return null;
 }
 
-let score=(win*300)-(lose*100)+400
+/* ➕ ADD */
+window.add = async function(){
 
-function save(logo){
+  if(!isAdmin) return;
 
-set(ref(db,"SEA/"+team),{
-team,
-logo,
-win,
-lose,
-})
+  let team = document.getElementById("team").value.trim();
+  let win = parseInt(document.getElementById("win").value) || 0;
+  let lose = parseInt(document.getElementById("lose").value) || 0;
 
-}
+  let data = await findTeam(team);
 
-if(file){
+  if(!data){
+    alert("Không tìm thấy team!");
+    return;
+  }
 
-let reader=new FileReader()
+  let domestic = data.score || 0;
+  let bonus = 0;
 
-reader.onload=function(e){
-save(e.target.result)
-}
+  let score = domestic + (win*20) - (lose*30) + bonus;
 
-reader.readAsDataURL(file)
-
-}else{
-
-save("")
-
-}
-
-document.getElementById("team").value=""
-document.getElementById("logo").value=""
-document.getElementById("win").value=""
-document.getElementById("lose").value=""
+  set(ref(db,"SEA/"+team),{
+    team,
+    logo:data.logo || "",
+    domestic,
+    win,
+    lose,
+    bonus,
+    score
+  });
 
 }
 
-/* load realtime */
+/* LOAD */
+onValue(ref(db,"SEA"),(snapshot)=>{
 
-const teamsRef = ref(db,"SEA")
+  let data=snapshot.val();
+  if(!data) return;
 
-onValue(teamsRef,(snapshot)=>{
+  let html="";
 
-let data=snapshot.val()
+  Object.values(data).forEach((t)=>{
 
-if(!data) return
+    html+=`
+    <tr>
+    <td style="display:flex;align-items:center;gap:8px;">
+      <img class="logo" src="${t.logo}" onerror="this.src='https://via.placeholder.com/40'">
+      ${t.team}
+    </td>
+    <td>${t.domestic}</td>
+    <td>${t.win}</td>
+    <td>${t.lose}</td>
+    <td>${t.bonus}</td>
+    <td><b>${t.score}</b></td>
+    <td>
+    ${isAdmin ? `
+    <button onclick="edit('${t.team}')">Edit</button>
+    <button onclick="removeTeam('${t.team}')">Delete</button>
+    ` : ""}
+    </td>
+    </tr>
+    `;
+  });
 
-let html=""
+  document.getElementById("list").innerHTML=html;
 
-Object.values(data).forEach((t)=>{
+});
 
-html+=`
-
-<tr>
-
-<td>
-<img class="logo" src="${t.logo}" onerror="this.src='https://via.placeholder.com/30'">
-${t.team}
-</td>
-
-<td>${t.win}</td>
-<td>${t.lose}</td>
-
-
-<td>
-
-${isAdmin ? `
-<button onclick="edit('${t.team}')">Edit</button>
-<button onclick="removeTeam('${t.team}')">Delete</button>
-` : ""}
-
-</td>
-
-</tr>
-
-`
-
-})
-
-document.getElementById("list").innerHTML=html
-
-})
-
-/* edit */
-
+/* EDIT */
 window.edit = function(team){
 
-if(!isAdmin) return;
+  let win = parseInt(prompt("Win")) || 0;
+  let lose = parseInt(prompt("Lose")) || 0;
+  let bonus = parseInt(prompt("Bonus")) || 0;
 
-let win=prompt("Win")
-let lose=prompt("Lose")
+  get(ref(db,"SEA/"+team)).then(snap=>{
 
-win=parseInt(win)
-lose=parseInt(lose)
+    let t=snap.val();
 
-if(isNaN(win)||isNaN(lose)) return
+    let score = t.domestic + (win*20) - (lose*30) + bonus;
 
-let score=(win*300)-(lose*100)+400
+    set(ref(db,"SEA/"+team),{
+      ...t,
+      win,
+      lose,
+      bonus,
+      score
+    });
 
-set(ref(db,"SEA/"+team+"/win"),win)
-set(ref(db,"SEA/"+team+"/lose"),lose)
-set(ref(db,"SEA/"+team+"/score"),score)
+  });
 
 }
 
-/* delete */
-
+/* DELETE */
 window.removeTeam = function(team){
-
-if(!isAdmin) return;
-
-if(confirm("Xóa đội này?")){
-remove(ref(db,"SEA/"+team))
+  if(confirm("Xóa team?")){
+    remove(ref(db,"SEA/"+team));
+  }
 }
 
-}
-
-/* search */
-
+/* SEARCH */
 window.searchTeam = function(){
-
-let key=document.getElementById("search").value.toLowerCase()
-
-document.querySelectorAll("#list tr").forEach(row=>{
-
-row.style.display=row.innerText.toLowerCase().includes(key) ? "" : "none"
-
-})
-
+  let key=document.getElementById("search").value.toLowerCase();
+  document.querySelectorAll("#list tr").forEach(row=>{
+    row.style.display=row.innerText.toLowerCase().includes(key) ? "" : "none";
+  });
 }
 
 </script>
