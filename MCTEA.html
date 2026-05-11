@@ -163,11 +163,10 @@ th,td{
 <table>
 <tr>
 <th>Team</th>
-<th>Điểm quốc nội</th>
 <th>Win</th>
 <th>Lose</th>
 <th>Bonus</th>
-<th>Score</th>
+<th>Điểm cộng</th>
 <th>Action</th>
 </tr>
 <tbody id="list"></tbody>
@@ -233,15 +232,15 @@ window.add = async function(){
     return;
   }
 
-  let domestic = data.score || 0;
+
   let bonus = 0;
 
-  let score = domestic + (win*20) - (lose*30) + bonus;
+  let score =  (win*20) - (lose*30) + bonus;
 
   set(ref(db,"EA/"+team),{
     team,
     logo: data.logo || "",
-    domestic,
+    
     win,
     lose,
     bonus,
@@ -270,7 +269,7 @@ onValue(teamsRef,(snapshot)=>{
       ${t.team}
     </td>
 
-    <td>${t.domestic}</td>
+
     <td>${t.win}</td>
     <td>${t.lose}</td>
     <td>${t.bonus}</td>
@@ -306,7 +305,7 @@ window.edit = function(team){
 
     let t = snap.val();
 
-    let score = t.domestic + (win*20) - (lose*30) + bonus;
+    let score =  (win*20) - (lose*30) + bonus;
 
     set(teamRef,{
       ...t,
