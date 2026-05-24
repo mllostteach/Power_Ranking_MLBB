@@ -155,10 +155,19 @@ return params.get("admin") === ADMIN_KEY;
 
 let isAdmin = checkAdmin();
 
-/* ẨN NÚT nếu không phải admin */
+/* Banner admin (giống Pasted code.html) */
+const isBannerAdmin = localStorage.getItem("login") === "true";
+
+/* ẨN NÚT nếu không phải admin và ẩn/hiện banner admin */
 window.addEventListener("DOMContentLoaded", ()=>{
 if(!isAdmin){
 document.getElementById("lockBtn").style.display = "none";
+}
+
+if(isBannerAdmin){
+  document.getElementById("bannerAdmin").style.display = "block";
+}else{
+  document.getElementById("bannerAdmin").style.display = "none";
 }
 });
 
@@ -172,6 +181,7 @@ return logo;
 
 /* ===== BANNER ===== */
 window.uploadBanner=function(){
+if(!isBannerAdmin) return;
 let file=document.getElementById("bannerUpload").files[0];
 if(!file) return;
 
@@ -224,6 +234,11 @@ let filtered = {};
 
 Object.entries(snap.val() || {}).forEach(([key,data])=>{
 if(!data) return;
+
+  if(currentMode==="split1" && !["tour1","tour2","tour3",
+  "eeca","india","thai","myanmar","vn","kh","lao","sg",
+  "mena","weu","mtc","latam","usa","na",
+  "cn","jp","kr","mgl","regional"].includes(key)) return;
 
 /* FILTER */
 if(currentMode==="msc" && !["tour1","tour2","tour3",
@@ -294,6 +309,11 @@ let map={};
 
 Object.entries(allData).forEach(([key,data])=>{
 if(!data) return;
+
+  if(currentMode==="split1" && !["tour1","tour2","tour3",
+  "eeca","india","thai","myanmar","vn","kh","lao","sg",
+  "mena","weu","mtc","latam","usa","na",
+  "cn","jp","kr","mgl","regional"].includes(key)) return;
 
 if(currentMode==="msc" && !["tour1","tour2","tour3",
 "eeca","india","thai","myanmar","vn","kh","lao","sg",
