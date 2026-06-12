@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">EggBlue</string>
+    <string name="login">Đăng nhập</string>
+    <string name="register">Đăng ký</string>
+    <string name="email">Email</string>
+    <string name="password">Mật khẩu</string>
+    <string name="confirm_password">Xác nhận mật khẩu</string>
+    <string name="home">Trang chủ</string>
+    <string name="diary">Nhật ký</string>
+    <string name="ai_chat">AI Chat</string>
+    <string name="account">Tài khoản</string>
+    <string name="task_name">Tên công việc</string>
+    <string name="task_note">Ghi chú</string>
+    <string name="select_date">Chọn ngày</string>
+    <string name="select_time">Chọn giờ</string>
+    <string name="complete">Hoàn thành</string>
+    <string name="change_password">Đổi mật khẩu</string>
+    <string name="change_avatar">Đổi avatar</string>
+    <string name="write_diary">Viết nhật ký</string>
+    <string name="logout">Đăng xuất</string>
+    <string name="save">Lưu</string>
+    <string name="cancel">Hủy</string>
+</resources>
