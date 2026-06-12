@@ -495,8 +495,35 @@ height:24px;
 
 /* small screens: make cards slightly smaller */
 @media(max-width:480px){
-	.player-card{min-width:140px;max-width:160px}
-	.player-card img{height:90px}
+	/* switch player rows to a responsive grid for small screens */
+	.player-row{
+		display:grid;
+		grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+		gap:12px;
+		justify-items:center;
+		align-items:start;
+		overflow-x:visible;
+		padding:8px 6px 18px 6px;
+	}
+
+	.player-card{
+		min-width:0;
+		max-width:100%;
+		width:100%;
+		box-sizing:border-box;
+		padding:8px;
+	}
+
+	.player-card img{height:84px}
+
+	/* enlarge buy/select buttons for touch */
+	.player-card button, .buy-btn{padding:10px 12px;font-size:15px;border-radius:8px}
+}
+
+/* mid-size phones: horizontal scroll with snap for rows */
+@media(min-width:481px) and (max-width:768px){
+	.player-row{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;padding:8px 6px 18px 6px}
+	.player-card{min-width:140px;max-width:180px;scroll-snap-align:center}
 }
 
 /* TOURNAMENT STYLES */
