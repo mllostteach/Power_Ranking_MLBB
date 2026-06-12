@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>MỜ LỜ MẤT LÃO </title>
+ 
+    <link rel="stylesheet" href="style.css">
+
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="game.js"></script>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <div>MỜ LỜ MẤT NÃO</div>
+
+        <div class="nav-links">
+            <a href="Index.html">ML Mất Não</a>
+            <a href="MSCatEWC.html" class="msc-btn">MSC</a>
+            <a href="M8.html" class="mseries-btn">M8</a>
+
+            <a href="MPLID.html">MPL ID</a>
+            <a href="MPLPH.html">MPL PH</a>
+            <a href="MPLMY.html">MPL MY</a>
+
+            <div class="dropdown">
+
+                <a class="dropbtn">MCT SERIES ▾</a>
+
+                <div class="dropdown-content">
+
+                    <a href="India.html">India</a>
+                    <a href="EECA.html">EECA</a>
+                    <a href="MCTSEA.html">MCT SEA</a>
+                    <a href="MCTEMEA.html">MCT EMEA</a>
+                    <a href="MCTAMER.html">MCT AMER</a>
+                    <a href="MCTEA.html">MCT EA</a>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <h1 class="title">
+        MỜ LỜ MẤT NÃO
+    </h1>
+   <h2 class="title">Bạn sẽ có 22 đồng </h2>
+    <h3 class="title">Màn hình sẽ cho bạn ra 5 player với mức giá từ 1 đến 5 vàng trong 1 lane , Bạn sẽ mua player và bạn có thể làm mới tối đa 4 lần .</h3>
+<h2 class="title">Sau khi bạn chọn xong, nhấn bắt đầu giải đấu và chinh phục cúp ( trong lòng người hâm mộ) </h2>
+    
+    <div class="top-bar">
+
+        <div class="gold-box">
+            🪙 Vàng:
+            <span id="gold">22</span>
+        </div>
+
+        <div class="refresh-box">
+            🔄 Refresh:
+            <span id="refreshCount">4</span>
+        </div>
+        
+
+        <button id="refreshBtn">
+            Làm mới
+        </button>
+
+    </div>
+    <div id="laneContainer">
+
+        <!-- Xạ thủ -->
+        <section class="lane-section">
+
+            <h2>XẠ THỦ</h2>
+
+            <div class="player-row"
+                id="marksmanLane">
+            </div>
+
+        </section>
+
+        <!-- Hỗ trợ -->
+        <section class="lane-section">
+
+            <h2>HỖ TRỢ</h2>
+
+            <div class="player-row"
+                id="supportLane">
+            </div>
+
+        </section>
+
+        <!-- Đấu sĩ -->
+        <section class="lane-section">
+
+            <h2>ĐẤU SĨ</h2>
+
+            <div class="player-row"
+                id="fighterLane">
+            </div>
+
+        </section>
+
+        <!-- Pháp sư -->
+        <section class="lane-section">
+
+            <h2>PHÁP SƯ</h2>
+
+            <div class="player-row"
+                id="mageLane">
+            </div>
+
+        </section>
+
+        <!-- Rừng -->
+        <section class="lane-section">
+
+            <h2>RỪNG</h2>
+
+            <div class="player-row"
+                id="jungleLane">
+            </div>
+
+        </section>
+
+    </div>
+
+    <div class="team-panel">
+
+        <h2>
+            ĐỘI HÌNH ĐÃ CHỌN
+        </h2>
+
+        <div id="selectedPlayers">
+        </div>
+        <div style="display:flex;gap:8px;justify-content:center;">
+            <button id="startTournament">
+                BẮT ĐẦU GIẢI ĐẤU
+            </button>
+
+            <button id="newGameBtn">
+                GAME MỚI
+            </button>
+        </div>
+
+    </div>
+
+    <div id="tournamentScreen"
+        class="hidden">
+
+        <h2>
+            GIẢI ĐẤU
+        </h2>
+
+        <div id="matchLog">
+        </div>
+
+    </div>
+
+    <div id="resultModal"
+        class="hidden">
+
+        <div class="result-content">
+
+            <h1 id="resultTitle">
+            </h1>
+
+            <div id="resultRoster">
+            </div>
+
+            <button onclick="location.reload()">
+                CHƠI LẠI
+            </button>
+
+            <button id="reviewBtn">
+                XEM LẠI
+            </button>
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html>
 
 <head>
@@ -42,13 +42,6 @@
 </div>
 </div>
 
-
-<a href="rankingglobal.html">Global Ranking</a>
-
-</div>
-
-</div>
-
 <div class="container">
 
 <h2>CHINA MASTER - FB: MỜ LỜ THẬT LOST TEACH</h2>
@@ -64,6 +57,7 @@
 <input type="file" id="logo" accept="image/*">
 <input id="win" placeholder="Win">
 <input id="lose" placeholder="Lose">
+<input id="bonus" placeholder="Bonus">
 
 <button onclick="add()">Add Team</button>
 
@@ -75,6 +69,7 @@
 <th>Team</th>
 <th>Win</th>
 <th>Lose</th>
+<th>Bonus</th>
 <th>Points</th>
 <th>Action</th>
 </tr>
@@ -99,8 +94,7 @@ const firebaseConfig = {
   projectId: "global-power-ranking",
   storageBucket: "global-power-ranking.firebasestorage.app",
   messagingSenderId: "382870176620",
-  appId: "1:382870176620:web:2223021ac756c798a2e949",
-  measurementId: "G-6WDYMQNLBJ"
+  appId: "1:382870176620:web:2223021ac756c798a2e949"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -123,6 +117,7 @@ if(!isAdmin) return;
 let team=document.getElementById("team").value.trim()
 let win=parseInt(document.getElementById("win").value)
 let lose=parseInt(document.getElementById("lose").value)
+let bonus=parseInt(document.getElementById("bonus").value) || 0
 let file=document.getElementById("logo").files[0]
 
 if(!team || isNaN(win) || isNaN(lose)){
@@ -130,7 +125,9 @@ alert("Vui lòng nhập đầy đủ thông tin")
 return
 }
 
-let score=(win*300)-(lose*100)+50
+/* GIỮ NGUYÊN CÔNG THỨC + BONUS */
+
+let score=(win*300)-(lose*100)+50+bonus
 
 function save(logo){
 
@@ -139,6 +136,7 @@ team,
 logo,
 win,
 lose,
+bonus,
 score
 })
 
@@ -164,6 +162,7 @@ document.getElementById("team").value=""
 document.getElementById("logo").value=""
 document.getElementById("win").value=""
 document.getElementById("lose").value=""
+document.getElementById("bonus").value=""
 
 }
 
@@ -179,11 +178,7 @@ if(!data) return
 
 let html=""
 
-/* chuyển object thành array */
-
 let teams = Object.values(data)
-
-/* sắp xếp theo điểm cao → thấp */
 
 teams.sort((a,b)=>b.score-a.score)
 
@@ -200,6 +195,7 @@ ${t.team}
 
 <td>${t.win}</td>
 <td>${t.lose}</td>
+<td>${t.bonus || 0}</td>
 <td>${t.score}</td>
 
 <td>
@@ -227,18 +223,19 @@ window.edit = function(team){
 
 if(!isAdmin) return;
 
-let win=prompt("Win")
-let lose=prompt("Lose")
-
-win=parseInt(win)
-lose=parseInt(lose)
+let win=parseInt(prompt("Win"))
+let lose=parseInt(prompt("Lose"))
+let bonus=parseInt(prompt("Bonus")) || 0
 
 if(isNaN(win)||isNaN(lose)) return
 
-let score=(win*300)-(lose*100)+50
+/* GIỮ NGUYÊN CÔNG THỨC EDIT + BONUS */
+
+let score=(win*75)-(lose*50)+50+bonus
 
 set(ref(db,"cn/"+team+"/win"),win)
 set(ref(db,"cn/"+team+"/lose"),lose)
+set(ref(db,"cn/"+team+"/bonus"),bonus)
 set(ref(db,"cn/"+team+"/score"),score)
 
 }

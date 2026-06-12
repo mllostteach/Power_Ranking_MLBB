@@ -14,6 +14,8 @@
 
 <div class="nav-links">
 
+<a href="Index.html">ML Mất Não</a>
+
 <a href="MSCatEWC.html" class="msc-btn">MSC</a>
 <a href="M8.html" class="mseries-btn">M8</a>
 
@@ -42,7 +44,6 @@
 </div>
 </div>
 
-
 <div class="container">
 
 <h2>MPL MENA - FB: MỜ LỜ THẬT LOST TEACH</h2>
@@ -58,6 +59,7 @@
 <input type="file" id="logo" accept="image/*">
 <input id="win" placeholder="Win">
 <input id="lose" placeholder="Lose">
+<input id="bonus" placeholder="Bonus">
 
 <button onclick="add()">Add Team</button>
 
@@ -69,6 +71,7 @@
 <th>Team</th>
 <th>Win</th>
 <th>Lose</th>
+<th>Bonus</th>
 <th>Points</th>
 <th>Action</th>
 </tr>
@@ -93,14 +96,13 @@ const firebaseConfig = {
   projectId: "global-power-ranking",
   storageBucket: "global-power-ranking.firebasestorage.app",
   messagingSenderId: "382870176620",
-  appId: "1:382870176620:web:2223021ac756c798a2e949",
-  measurementId: "G-6WDYMQNLBJ"
+  appId: "1:382870176620:web:2223021ac756c798a2e949"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* kiểm tra admin */
+/* admin */
 
 let isAdmin = localStorage.getItem("login") === "true";
 
@@ -108,7 +110,7 @@ if(!isAdmin){
 document.getElementById("adminPanel").style.display="none";
 }
 
-/* thêm team */
+/* ADD */
 
 window.add = function(){
 
@@ -117,6 +119,7 @@ if(!isAdmin) return;
 let team=document.getElementById("team").value.trim()
 let win=parseInt(document.getElementById("win").value)
 let lose=parseInt(document.getElementById("lose").value)
+let bonus=parseInt(document.getElementById("bonus").value) || 0
 let file=document.getElementById("logo").files[0]
 
 if(!team || isNaN(win) || isNaN(lose)){
@@ -124,7 +127,9 @@ alert("Vui lòng nhập đầy đủ thông tin")
 return
 }
 
-let score=(win*280)-(lose*100)+80
+/* GIỮ NGUYÊN CÔNG THỨC + BONUS */
+
+let score=(win*93)-(lose*75)+80+bonus
 
 function save(logo){
 
@@ -133,6 +138,7 @@ team,
 logo,
 win,
 lose,
+bonus,
 score
 })
 
@@ -158,25 +164,21 @@ document.getElementById("team").value=""
 document.getElementById("logo").value=""
 document.getElementById("win").value=""
 document.getElementById("lose").value=""
+document.getElementById("bonus").value=""
 
 }
 
-/* load realtime */
+/* LOAD */
 
 const teamsRef = ref(db,"mena")
+
 onValue(teamsRef,(snapshot)=>{
 
 let data = snapshot.val()
-
 if(!data) return
 
 let html=""
-
-/* chuyển object thành array */
-
 let teams = Object.values(data)
-
-/* sắp xếp theo điểm cao → thấp */
 
 teams.sort((a,b)=>b.score-a.score)
 
@@ -193,6 +195,7 @@ ${t.team}
 
 <td>${t.win}</td>
 <td>${t.lose}</td>
+<td>${t.bonus || 0}</td>
 <td>${t.score}</td>
 
 <td>
@@ -214,29 +217,31 @@ document.getElementById("list").innerHTML = html
 
 })
 
-/* edit */
+/* EDIT */
 
 window.edit = function(team){
 
 if(!isAdmin) return;
 
-let win=prompt("Win")
-let lose=prompt("Lose")
-
-win=parseInt(win)
-lose=parseInt(lose)
+let win=parseInt(prompt("Win"))
+let lose=parseInt(prompt("Lose"))
+let bonus=parseInt(prompt("Bonus")) || 0
 
 if(isNaN(win)||isNaN(lose)) return
 
-let score=(win*280)-(lose*100)+80
+/* GIỮ NGUYÊN CÔNG THỨC + BONUS */
+
+
+let score=(win*123)-(lose*76)+80+bonus
 
 set(ref(db,"mena/"+team+"/win"),win)
 set(ref(db,"mena/"+team+"/lose"),lose)
+set(ref(db,"mena/"+team+"/bonus"),bonus)
 set(ref(db,"mena/"+team+"/score"),score)
 
 }
 
-/* delete */
+/* DELETE */
 
 window.removeTeam = function(team){
 
@@ -248,16 +253,14 @@ remove(ref(db,"mena/"+team))
 
 }
 
-/* search */
+/* SEARCH */
 
 window.searchTeam = function(){
 
 let key=document.getElementById("search").value.toLowerCase()
 
 document.querySelectorAll("#list tr").forEach(row=>{
-
 row.style.display=row.innerText.toLowerCase().includes(key) ? "" : "none"
-
 })
 
 }

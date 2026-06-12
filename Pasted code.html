@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>Global Ranking</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="navbar">
+
+<div>GLOBAL POWER RANKING</div>
+<div class="nav-links">
+
+<a href="MSCatEWC.html" class="msc-btn">MSC</a>
+<a href="M8.html" class="mseries-btn">M8</a>
+
+<a href="MPLID.html">MPL ID</a>
+<a href="MPLPH.html">MPL PH</a>
+<a href="MPLMY.html">MPL MY</a>
+
+<div class="dropdown">
+
+<a class="dropbtn">MCT SERIES ▾</a>
+
+<div class="dropdown-content">
+
+<a href="India.html">India</a>
+<a href="EECA.html">EECA</a>
+<a href="MCTSEA.html">MCT SEA</a>
+<a href="MCTEMEA.html">MCT EMEA</a>
+<a href="MCTAMER.html">MCT AMER</a>
+<a href="MCTEA.html">MCT EA</a>
+
+</div>
+</div>
+
+<a href="rankingglobal.html">Global Ranking</a>
+
+</div>
+</div>
+
+
+<div class="banner">
+
+<img id="bannerImg">
+
+<div id="bannerAdmin">
+
+<input type="file" id="bannerUpload">
+<button onclick="uploadBanner()">Upload Banner</button>
+
+</div>
+
+</div>
+
+<div class="container">
+
+<h2>Global Ranking</h2>
+
+<table>
+
+<tr>
+<th>Rank</th>
+<th>Team</th>
+<th>Trophies</th>
+<th>Total Points</th>
+</tr>
+
+<tbody id="rank"></tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* Firebase */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAwv0kDiGGvFcpZm2lKhD9Jq6dFoJXWGm0",
+  authDomain: "global-power-ranking.firebaseapp.com",
+  databaseURL: "https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "global-power-ranking",
+  storageBucket: "global-power-ranking.firebasestorage.app",
+  messagingSenderId: "382870176620",
+  appId: "1:382870176620:web:2223021ac756c798a2e949"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+
+/* admin check */
+
+let isAdmin = localStorage.getItem("login") === "true";
+
+if(isAdmin){
+document.getElementById("bannerAdmin").style.display="block";
+}else{
+document.getElementById("bannerAdmin").style.display="none";
+}
+
+
+/* banner upload */
+
+window.uploadBanner = function(){
+
+if(!isAdmin) return;
+
+let file=document.getElementById("bannerUpload").files[0];
+if(!file) return;
+
+let reader=new FileReader();
+
+reader.onload=function(e){
+
+set(ref(db,"site/banner"),{
+img:e.target.result
+})
+
+}
+
+reader.readAsDataURL(file)
+
+}
+
+
+/* banner realtime */
+
+const bannerRef = ref(db,"site/banner");
+
+onValue(bannerRef,(snapshot)=>{
+
+let data=snapshot.val();
+
+if(!data) return;
+
+document.getElementById("bannerImg").src=data.img;
+
+});
+
+
+/* LIST TOURNAMENT */
+
+const tournaments = [
+
+"tour1",
+"tour2",
+"tour3",
+
+"eeca",
+"india",
+"thai",
+"myanmar",
+"vn",
+"kh",
+"lao",
+"sg",
+
+"mena",
+"weu",
+
+"mtc",
+
+"latam",
+"usa",
+"na",
+
+"cn",
+"jp",
+"kr",
+"mgl",
+"regional",
+
+/* INTERNATIONAL */
+
+"msc",
+"mseries"
+
+];
+
+
+/* DATA STORAGE */
+
+let allData = {};
+
+
+/* UPDATE RANKING */
+
+function updateRanking(){
+
+let map={};
+
+function addData(data){
+
+if(!data) return;
+
+Object.values(data).forEach(t=>{
+
+if(!map[t.team]){
+
+map[t.team]={
+team:t.team,
+logo:t.logo,
+score:0,
+trophies:[]
+}
+
+}
+
+/* cộng điểm */
+
+map[t.team].score += Number(t.score) || 0;
+
+/* thêm danh hiệu nếu có */
+
+if(t.placement){
+map[t.team].trophies.push(t.placement)
+}
+
+})
+
+}
+
+Object.values(allData).forEach(d=>addData(d));
+
+let teams = Object.values(map);
+
+teams.sort((a,b)=>b.score-a.score);
+
+let html="";
+
+teams.forEach((t,i)=>{
+
+let rankClass="";
+
+if(i==0) rankClass="rank1";
+if(i==1) rankClass="rank2";
+if(i==2) rankClass="rank3";
+if(i==3) rankClass="rank4";
+
+/* danh hiệu */
+
+let trophies="";
+
+/* remove duplicate trophies */
+
+let uniqueTrophies = [...new Set(t.trophies)];
+
+uniqueTrophies.forEach(p=>{
+
+/* MSC */
+
+if(p=="1st MSC")
+trophies+=`<span class="gold">🥇 ${p}</span> `;
+
+else if(p=="2nd MSC")
+trophies+=`<span class="silver">🥈 ${p}</span> `;
+
+else if(p=="3rd MSC")
+trophies+=`<span class="bronze">🥉 ${p}</span> `;
+
+
+/* M-Series */
+
+else if(p=="1st M8")
+trophies+=`<span class="gold mseries">🥇 ${p}</span> `;
+
+else if(p=="2nd M8")
+trophies+=`<span class="silver mseries">🥈 ${p}</span> `;
+
+else if(p=="3rd M8")
+trophies+=`<span class="bronze mseries">🥉 ${p}</span> `;
+
+
+/* Regional Champion */
+
+else if(p.includes("Champion MPL") || p.includes("Champion MCT"))
+trophies+=`<span class="regional">🏆 ${p}</span> `;
+
+
+/* Regional Runner-up */
+
+else if(p.includes("Runner-up MPL") || p.includes("Runner-up MCT"))
+trophies+=`<span class="regional silver">🥈 ${p}</span> `;
+
+
+/* Other placements */
+
+else
+trophies+=`<span class="normal">${p}</span> `;
+
+});
+
+html+=`
+
+<tr class="${rankClass}">
+
+<td>${i+1}</td>
+
+<td>
+<img class="logo" src="${t.logo}" onerror="this.src='https://via.placeholder.com/30'">
+${t.team}
+</td>
+
+<td>${trophies}</td>
+
+<td>${t.score}</td>
+
+</tr>
+
+`
+
+})
+
+document.getElementById("rank").innerHTML=html;
+
+}
+
+/* LOAD ALL TOURNAMENT */
+
+tournaments.forEach(name=>{
+
+const tournamentRef = ref(db,name);
+
+onValue(tournamentRef,(snapshot)=>{
+
+allData[name] = snapshot.val();
+
+updateRanking();
+
+})
+
+});
+
+</script>
+
+</body>
+</html>

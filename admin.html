@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADMIN PLAYER MANAGER</title>
+
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+
+        body{
+            background:#0d1117;
+            color:white;
+        }
+
+        .admin-container{
+            max-width:900px;
+            margin:auto;
+            padding:30px;
+        }
+
+        .admin-card{
+            background:#161b22;
+            padding:25px;
+            border-radius:15px;
+        }
+
+        .form-group{
+            margin-bottom:15px;
+        }
+
+        label{
+            display:block;
+            margin-bottom:5px;
+        }
+
+        input,
+        select{
+            width:100%;
+            padding:12px;
+            border:none;
+            border-radius:8px;
+            background:#21262d;
+            color:white;
+        }
+
+        button{
+            width:100%;
+            padding:15px;
+            background:#238636;
+            border:none;
+            color:white;
+            font-size:18px;
+            border-radius:10px;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:#2ea043;
+        }
+
+        #preview{
+            width:180px;
+            height:180px;
+            object-fit:cover;
+            border-radius:12px;
+            margin-top:15px;
+            border:2px solid #444;
+        }
+
+        .success{
+            margin-top:15px;
+            color:#3fb950;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="admin-container">
+
+    <h1>
+        ADMIN PLAYER MANAGER
+    </h1>
+
+    <br>
+
+    <div class="admin-card">
+
+        <div class="form-group">
+
+            <label>Tên tuyển thủ</label>
+
+            <input
+                type="text"
+                id="name">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Team</label>
+
+            <input
+                type="text"
+                id="team">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Lane</label>
+
+            <select id="lane">
+
+                <option value="marksman">
+                    Xạ thủ
+                </option>
+
+                <option value="support">
+                    Hỗ trợ
+                </option>
+
+                <option value="fighter">
+                    Đấu sĩ
+                </option>
+
+                <option value="mage">
+                    Pháp sư
+                </option>
+
+                <option value="jungle">
+                    Rừng
+                </option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Kỹ năng</label>
+
+            <input
+                type="number"
+                id="skill"
+                min="1"
+                max="100">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Đột biến</label>
+
+            <input
+                type="number"
+                id="clutch"
+                min="1"
+                max="100">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Phối hợp</label>
+
+            <input
+                type="number"
+                id="synergy"
+                min="1"
+                max="100">
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Giá tiền</label>
+
+            <select id="cost">
+
+                <option value="1">1 vàng</option>
+                <option value="2">2 vàng</option>
+                <option value="3">3 vàng</option>
+                <option value="4">4 vàng</option>
+                <option value="5">5 vàng</option>
+
+            </select>
+
+        </div>
+
+        <div class="form-group">
+
+            <label>Ảnh tuyển thủ</label>
+
+            <input
+                type="file"
+                id="image">
+
+        </div>
+
+        <img
+            id="preview">
+
+        <br><br>
+
+        <button id="saveBtn">
+
+            LƯU PLAYER
+
+        </button>
+
+        <div
+            class="success"
+            id="message">
+        </div>
+
+    </div>
+
+</div>
+
+<script type="module"
+src="admin.js">
+</script>
+
+</body>
+
+</html>

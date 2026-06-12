@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MCTEA Banner Manager</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .center{padding:30px}
+    .banner{width:100%;max-width:1200px;margin:20px auto;position:relative}
+    .banner img{width:100%;height:auto;display:block;max-height:400px;object-fit:cover}
+    #bannerAdmin{position:absolute;left:20px;bottom:20px;background:rgba(0,0,0,0.7);padding:10px;border-radius:6px;display:none}
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <a href="Index.html">ML Mất Não</a>
+    <div style="padding:12px 24px">MCTEA - Banner Manager</div>
+  </div>
+  <div class="center">
+    <div class="banner">
+      <img id="bannerEA" src="https://via.placeholder.com/1200x250?text=MCTEA+Banner" alt="Banner">
+      <div id="bannerAdmin">
+        <input type="file" id="bannerUpload">
+        <button onclick="uploadBanner()">Upload Banner</button>
+      </div>
+    </div>
+    <p>Open this page with <code>?admin=123</code> to enable uploads.</p>
+  </div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAwv0kDiGGvFcpZm2lKhD9Jq6dFoJXWGm0",
+  authDomain: "global-power-ranking.firebaseapp.com",
+  databaseURL: "https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "global-power-ranking",
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const ADMIN_KEY = "123";
+function checkAdmin(){
+  const params = new URLSearchParams(window.location.search);
+  return params.get("admin") === ADMIN_KEY;
+}
+const isAdmin = checkAdmin();
+const bannerAdminEl = document.getElementById('bannerAdmin');
+if(bannerAdminEl){
+  bannerAdminEl.style.display = isAdmin ? 'block' : 'none';
+}
+
+nwindow.uploadBanner = function(){
+  if(!isAdmin) return;
+  const file = document.getElementById('bannerUpload').files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    set(ref(db,'site/bannerEA'), { img: e.target.result });
+  };
+  reader.readAsDataURL(file);
+}
+
+const bannerImg = document.getElementById('bannerEA');
+const placeholder = 'https://via.placeholder.com/1200x250?text=MCTEA+Banner';
+if(bannerImg) bannerImg.src = placeholder;
+onValue(ref(db,'site/bannerEA'), snap => {
+  const data = snap.val();
+  if(!bannerImg) return;
+  if(!data || !data.img) bannerImg.src = placeholder;
+  else bannerImg.src = data.img;
+});
+</script>
+</body>
+</html>

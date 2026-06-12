@@ -14,6 +14,8 @@
 
 <div class="nav-links">
 
+<a href="Index.html">ML Mất Não</a>
+
 <a href="MSCatEWC.html" class="msc-btn">MSC</a>
 <a href="M8.html" class="mseries-btn">M8</a>
 
@@ -58,6 +60,7 @@
 <input type="file" id="logo" accept="image/*">
 <input id="win" placeholder="Win">
 <input id="lose" placeholder="Lose">
+<input id="bonus" placeholder="Bonus (điểm cộng)">
 
 <button onclick="add()">Add Team</button>
 
@@ -69,6 +72,7 @@
 <th>Team</th>
 <th>Win</th>
 <th>Lose</th>
+<th>Bonus</th>
 <th>Points</th>
 <th>Action</th>
 </tr>
@@ -118,13 +122,13 @@ let team=document.getElementById("team").value.trim()
 let win=parseInt(document.getElementById("win").value)
 let lose=parseInt(document.getElementById("lose").value)
 let file=document.getElementById("logo").files[0]
-
+let bonus=parseInt(document.getElementById("bonus").value) || 0
 if(!team || isNaN(win) || isNaN(lose)){
 alert("Vui lòng nhập đầy đủ thông tin")
 return
 }
 
-let score=(win*152)-(lose*100)+400
+let score=(win*76)-(lose*50)+400+bonus
 
 function save(logo){
 
@@ -133,6 +137,7 @@ team,
 logo,
 win,
 lose,
+bonus,
 score
 })
 
@@ -158,6 +163,7 @@ document.getElementById("team").value=""
 document.getElementById("logo").value=""
 document.getElementById("win").value=""
 document.getElementById("lose").value=""
+document.getElementById("bonus").value=""
 
 }
 
@@ -194,6 +200,7 @@ ${t.team}
 
 <td>${t.win}</td>
 <td>${t.lose}</td>
+<td>${t.bonus || 0}</td>
 <td>${t.score}</td>
 
 <td>
@@ -222,13 +229,13 @@ if(!isAdmin) return;
 
 let win=prompt("Win")
 let lose=prompt("Lose")
-
+let bonus=prompt("Bonus", "0")
 win=parseInt(win)
 lose=parseInt(lose)
-
+bonus=parseInt(bonus) || 0
 if(isNaN(win)||isNaN(lose)) return
 
-let score=(win*152)-(lose*100)+400
+let score=(win*70)-(lose*50)+400+bonus
 
 set(ref(db,"tour1/"+team+"/win"),win)
 set(ref(db,"tour1/"+team+"/lose"),lose)

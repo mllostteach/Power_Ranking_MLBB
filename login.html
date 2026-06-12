@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Login</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Admin Login</h2>
+
+<div class="card">
+
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+</div>
+
+</div>
+
+<script>
+
+function login(){
+
+let u=document.getElementById("user").value
+let p=document.getElementById("pass").value
+
+if(u==="admin" && p==="1234"){
+
+localStorage.setItem("login","true")
+
+window.location="MPLID.html"
+
+}
+
+else{
+
+alert("Sai tài khoản")
+
+}
+
+}
+
+</script>
+
+</body>
+</html>

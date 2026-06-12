@@ -1,0 +1,188 @@
+<!DOCTYPE html> 
+<html>
+
+<head>
+<title>M-Series Tournament</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="navbar">
+<div>M-SERIES (M8) - FB: MỜ LỜ THẬT LOST TEACH</div>
+
+<div class="nav-links">
+
+<a href="Index.html">ML Mất Não</a>
+<a href="MPLID.html">MPL ID</a>
+<a href="MPLPH.html">MPL PH</a>
+<a href="MPLMY.html">MPL MY</a>
+<a href="rankingglobal.html">Global Ranking</a>
+</div>
+</div>
+
+<div class="container">
+
+<h2>M-Series Result</h2>
+
+<input id="teamInput" placeholder="Type team name">
+
+<img id="teamLogo" class="logo" style="width:50px;height:50px">
+
+<br><br>
+
+<select id="placement">
+<option value="">Placement</option>
+<option value="champion">Champion</option>
+<option value="runnerup">Runner-up</option>
+<option value="top4">Top 4</option>
+<option value="top8">Top 8</option>
+<option value="top12">Top 12</option>
+<option value="top16">Top 16</option>
+</select>
+
+<br><br>
+
+<!-- ✅ THÊM BONUS -->
+<input id="bonus" placeholder="Bonus points">
+
+<br><br>
+
+<button onclick="addMSeries()">Add Result</button>
+<button onclick="removeMSeries()">Remove Result</button>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+/* Firebase */
+const firebaseConfig = {
+apiKey: "AIza...",
+authDomain: "global-power-ranking.firebaseapp.com",
+databaseURL: "https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId: "global-power-ranking",
+storageBucket: "global-power-ranking.firebasestorage.app",
+messagingSenderId: "382870176620",
+appId: "1:382870176620:web:2223021ac756c798a2e949"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* placement → points */
+const mseriesPoints = {
+champion:2500,
+runnerup:2000,
+top4:1600,
+top8:1200,
+top12:900,
+top16:600
+}
+
+/* placement text */
+const placementText = {
+champion:"1st M8",
+runnerup:"2nd M8",
+top4:"3rd M8",
+top8:"Top 8 M8",
+top12:"Top 12 M8",
+top16:"Top 16 M8"
+}
+
+/* load team resource */
+const tournaments = [
+"tour1","tour2","tour3",
+"eeca","india","thai","myanmar","vn","kh","lao","sg",
+"mena","weu",
+"mtc",
+"latam","usa","na",
+"cn","jp","kr","mgl"
+];
+
+let teamResource = {};
+
+/* load teams */
+tournaments.forEach(name=>{
+const r = ref(db,name);
+
+onValue(r,(snapshot)=>{
+let data=snapshot.val();
+if(!data) return;
+
+Object.values(data).forEach(t=>{
+teamResource[t.team]=t.logo;
+})
+})
+});
+
+/* auto logo */
+document.getElementById("teamInput").addEventListener("input",function(){
+let team=this.value;
+let logo=teamResource[team];
+
+if(logo){
+document.getElementById("teamLogo").src=logo;
+}
+});
+
+/* add M-Series result */
+window.addMSeries=function(){
+
+let team=document.getElementById("teamInput").value;
+let placement=document.getElementById("placement").value;
+let bonus=parseInt(document.getElementById("bonus").value) || 0;
+
+if(!team || !placement){
+alert("Missing data");
+return;
+}
+
+/* ✅ FIX: luôn có điểm */
+let baseScore = mseriesPoints[placement] || 0;
+let placementLabel = placementText[placement];
+
+/* ✅ cộng bonus */
+let totalScore = baseScore + bonus;
+
+/* push to firebase */
+set(ref(db,"mseries/"+team),{
+team:team,
+score:totalScore,
+bonus:bonus,
+placement:placementLabel
+})
+
+alert("M-Series result added");
+}
+
+/* REMOVE */
+window.removeMSeries=function(){
+
+let team=document.getElementById("teamInput").value;
+
+if(!team){
+alert("Enter team name");
+return;
+}
+
+if(confirm("Remove M-Series result of "+team+" ?")){
+
+remove(ref(db,"mseries/"+team));
+
+alert("M-Series result removed");
+
+document.getElementById("teamInput").value="";
+document.getElementById("teamLogo").src="";
+document.getElementById("placement").value="";
+document.getElementById("bonus").value="";
+
+}
+}
+
+</script>
+
+</body>
+</html>

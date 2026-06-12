@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>MSC Tournament</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="navbar">
+
+<div>MSC AT EWC</div>
+ 
+<div class="nav-links">
+<a href="MPLID.html">MPL ID</a>
+<a href="MPLPH.html">MPL PH</a>
+<a href="MPLMY.html">MPL MY</a>
+<a href="rankingglobal.html">Global Ranking</a>
+</div>
+
+</div>
+
+
+<div class="container">
+
+
+<h2>Regional Result</h2>
+
+<input id="teamInput" placeholder="Type team name">
+
+<img id="teamLogo" class="logo" style="width:50px;height:50px">
+
+<br><br>
+
+
+<select id="placement">
+
+<option value="">Placement</option>
+<option value="champion">Champion</option>
+<option value="runnerup">Runner-up</option>
+<option value="top3">Top 3</option>
+<option value="top4">Top 4</option>
+<option value="top8">Top 8</option>
+<option value="top12">Top 12</option>
+<option value="top16">Top 16</option>
+<option value="top17">Top 17</option>
+<option value="top19">Top 19</option>
+<option value="top21">Top 21</option>
+<option value="top23">Top 23</option>
+<option value="top25">Top 25</option>
+
+</select>
+
+<br><br>
+
+<input id="bonus" placeholder="Bonus points">
+
+<br><br>
+
+<button onclick="addMSC()">Add Result</button>
+<button onclick="removeMSC()">Remove Result</button>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+
+/* Firebase */
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyAwv0kDiGGvFcpZm2lKhD9Jq6dFoJXWGm0",
+authDomain: "global-power-ranking.firebaseapp.com",
+databaseURL: "https://global-power-ranking-default-rtdb.asia-southeast1.firebasedatabase.app",
+projectId: "global-power-ranking",
+storageBucket: "global-power-ranking.firebasestorage.app",
+messagingSenderId: "382870176620",
+appId: "1:382870176620:web:2223021ac756c798a2e949"
+
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+
+/* placement → points */
+
+const mscPoints = {
+
+champion:2500,
+runnerup:1400,
+top3:1350,
+top4:1300,
+top8:1200,
+top12:1000,
+top16:800,
+top17:500,
+top19:300,
+top21:200,
+top23:100,
+top25:0
+
+
+}
+
+
+/* placement text */
+
+const placementText = {
+
+champion:"1st MSC",
+runnerup:"2nd MSC",
+top3:"3rd MSC",
+top4:"4th MSC",
+top8:"Top 8 MSC",
+top12:"Top 12 MSC",
+top16:"Top 16 MSC",
+top17:"Top 17 MSC",
+top19:"Top 19 MSC",
+top21:"Top 21 MSC",
+top23:"Top 23 MSC",
+top25:"Top 25 MSC"
+
+}
+
+
+/* load team resource */
+
+const tournaments = [
+
+"tour1","tour2","tour3",
+"eeca","india","thai","myanmar","vn","kh","lao","sg",
+"mena","weu",
+"mtc",
+"latam","usa","na",
+"cn","jp","kr","mgl"
+
+];
+
+let teamResource = {};
+
+
+/* load teams */
+
+tournaments.forEach(name=>{
+
+const r = ref(db,name);
+
+onValue(r,(snapshot)=>{
+
+let data = snapshot.val();
+
+if(!data) return;
+
+Object.values(data).forEach(t=>{
+
+teamResource[t.team] = t.logo;
+
+})
+
+})
+
+});
+
+
+/* auto logo */
+
+document.getElementById("teamInput").addEventListener("input",function(){
+
+let team = this.value;
+
+let logo = teamResource[team];
+
+if(logo){
+document.getElementById("teamLogo").src = logo;
+}
+
+});
+
+
+/* add MSC result */
+
+window.addMSC = function(){
+
+let team = document.getElementById("teamInput").value;
+let placement = document.getElementById("placement").value;
+let bonus = parseInt(document.getElementById("bonus").value) || 0;
+
+if(!team || !placement){
+
+alert("Missing data");
+return;
+
+}
+
+let placementScore = mscPoints[placement];
+let placementLabel = placementText[placement];
+
+/* total score */
+
+let totalScore = placementScore + bonus;
+
+
+/* push to firebase */
+
+set(ref(db,"msc/"+team),{
+
+team:team,
+score:totalScore,
+bonus:bonus,
+placement:placementLabel
+
+})
+
+alert("MSC result added");
+
+}
+
+
+/* REMOVE MSC RESULT */
+
+window.removeMSC = function(){
+
+let team = document.getElementById("teamInput").value;
+
+if(!team){
+
+alert("Enter team name");
+return;
+
+}
+
+if(confirm("Remove MSC result of "+team+" ?")){
+
+remove(ref(db,"msc/"+team));
+
+alert("MSC result removed");
+
+document.getElementById("teamInput").value="";
+document.getElementById("teamLogo").src="";
+document.getElementById("placement").value="";
+document.getElementById("bonus").value="";
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
