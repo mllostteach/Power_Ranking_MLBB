@@ -11,7 +11,7 @@ margin:0;
 display:flex;
 justify-content:space-between;
 align-items:center;
-padding:15px 40px;
+padding:12px 20px;
 background:#05080c;
 border-bottom:1px solid #222;
 }
@@ -21,6 +21,8 @@ color:#aaa;
 margin-right:20px;
 text-decoration:none;
 }
+
+.nav-links{display:flex;align-items:center;gap:8px}
 
 .nav-links a:hover{
 color:white;
@@ -284,12 +286,52 @@ font-size:13px;
 @media(max-width:768px){
 
 .navbar{
-flex-direction:column;
-gap:10px;
+	flex-direction:row;
+	align-items:center;
+	gap:8px;
 }
 
+/* hamburger button */
+.hamburger{
+	display:block;
+	width:36px;
+	height:36px;
+	border-radius:6px;
+	background:transparent;
+	border:1px solid rgba(255,255,255,0.04);
+	color:#ddd;
+	font-size:20px;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	cursor:pointer;
+}
+
+/* hide nav-links by default on small screens; show when .open */
+.nav-links{
+	display:none;
+	position:absolute;
+	top:60px;
+	left:12px;
+	right:12px;
+	background:#05080c;
+	border-radius:8px;
+	padding:12px;
+	flex-direction:column;
+	gap:8px;
+	border:1px solid #16191d;
+	z-index:20;
+}
+.nav-links.open{display:flex}
+
+.nav-links a{margin:8px 4px}
+
+/* dropdown inside mobile: show block and full width */
+.dropdown-content{position:relative;top:0;border:none;background:transparent;padding:0}
+.dropdown-content a{padding:8px 12px;border-radius:6px}
+
 .container{
-padding:20px;
+	padding:20px;
 }
 
 table{
