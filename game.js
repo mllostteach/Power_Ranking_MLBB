@@ -4,11 +4,15 @@ import {
     get
 } from "./firebase.js";
 
+import { renderSelectedPlayersUI } from './selectedDisplay.js';
+import { showResultModal, hideResultModal } from './resultDisplay.js';
+
 /* =====================================
-   GAME STATE
+    TRẠNG THÁI GAME
+    (Game state)
 ===================================== */
 
-let gold = 22;
+let gold = 21;
 
 let refreshRemain = 4;
 
@@ -30,14 +34,14 @@ let currentShop = {
     jungle: []
 };
 
-// selection order and index for sequential picking
+// thứ tự chọn lane và chỉ số hiện tại (chọn theo thứ tự)
 const selectionOrder = ["marksman", "support", "fighter", "mage", "jungle"];
 let currentSelectionIndex = 0;
 
-let lastResultData = null; // store last tournament result for 'KẾT QUẢ' button
+let lastResultData = null; // lưu kết quả cuối cùng để nút 'XEM LẠI' sử dụng
 
 /* =====================================
-   DOM
+    DOM (tham chiếu phần tử)
 ===================================== */
 
 const goldEl = document.getElementById("gold");
@@ -46,8 +50,13 @@ const refreshEl = document.getElementById("refreshCount");
 const refreshBtn =
     document.getElementById("refreshBtn");
 
-const selectedContainer =
-    document.getElementById("selectedPlayers");
+// music elements (YouTube player)
+let bgMusicPlayer = null;
+let musicPlaying = false;
+const defaultMusicLabelOn = '🔊 Tắt nhạc';
+const defaultMusicLabelOff = '🔊 Bật nhạc';
+
+// Lưu ý: phần hiển thị đội đã được tách sang selectedDisplay.js
 
 const laneElements = {
     marksman:
@@ -67,7 +76,7 @@ const laneElements = {
 };
 
 /* =====================================
-   INIT
+    KHỞI TẠO (INIT)
 ===================================== */
 
 window.addEventListener(
@@ -80,29 +89,87 @@ window.addEventListener(
 
         renderShop();
 
-        renderSelectedPlayers();
+        // render phần đội hình (module riêng)
+        renderSelectedPlayersUI(selectedPlayers, selectionOrder, gold, 'selectedPlayers', 'gold', onDeselect);
             updateVisibleLane();
             setupLaneClickHandlers();
+
+        // initialize music controls (YouTube player)
+        try {
+            const musicToggle = document.getElementById('musicToggle');
+            if (musicToggle) {
+                musicToggle.textContent = defaultMusicLabelOff;
+
+                // create YT player when API ready
+                function createYT() {
+                    try {
+                        bgMusicPlayer = new YT.Player('ytPlayer', {
+                            height: '0',
+                            width: '0',
+                            videoId: 'KheFsJvAvsU',
+                            playerVars: { controls: 1, loop: 1, playlist: 'KheFsJvAvsU', modestbranding: 1, rel: 0 },
+                            events: {
+                                onReady: function () {
+                                    // nothing
+                                }
+                            }
+                        });
+                    } catch (e) {
+                        // ignore
+                    }
+                }
+
+                if (window.YT && window.YT.Player) {
+                    createYT();
+                } else {
+                    // set global callback for API
+                    window.onYouTubeIframeAPIReady = function () {
+                        createYT();
+                    };
+                }
+
+                musicToggle.addEventListener('click', async () => {
+                    if (!bgMusicPlayer) return;
+                    try {
+                        const state = bgMusicPlayer.getPlayerState ? bgMusicPlayer.getPlayerState() : -1;
+                        // states: 1=playing, 2=paused
+                        if (state === 1) {
+                            bgMusicPlayer.pauseVideo();
+                            musicPlaying = false;
+                            musicToggle.textContent = defaultMusicLabelOff;
+                        } else {
+                            bgMusicPlayer.playVideo();
+                            musicPlaying = true;
+                            musicToggle.textContent = defaultMusicLabelOn;
+                        }
+                    } catch (e) {
+                        // ignore
+                    }
+                });
+            }
+        } catch (e) {
+            // ignore
+        }
     }
 );
 
 const laneContainer = document.getElementById("laneContainer");
 
 function updateVisibleLane() {
-    // if team completed, hide shop container and show team panel
+    // nếu đội đã đầy, ẩn phần shop và hiển thị panel đội
     if (teamCompleted()) {
         if (laneContainer) laneContainer.classList.add('hidden');
         return;
     }
 
-    // show only the current lane
+    // chỉ hiển thị lane hiện tại
     if (laneContainer) laneContainer.classList.remove('hidden');
 
     const currentLane = selectionOrder[currentSelectionIndex] || null;
     Object.keys(laneElements).forEach(l => {
         const section = laneElements[l].closest('section');
         if (!section) return;
-        // hide non-current lanes completely; show only the active lane
+        // ẩn các lane không phải lane hiện tại; chỉ hiển thị lane active
         if (l === currentLane) {
             section.classList.remove('hidden');
             section.classList.add('active-lane');
@@ -115,7 +182,7 @@ function updateVisibleLane() {
     });
 }
 
-// allow clicking lane header to activate that lane (only one lane active at a time)
+// cho phép bấm tiêu đề lane để kích hoạt lane đó (chỉ 1 lane active)
 function setupLaneClickHandlers() {
     Object.keys(laneElements).forEach(lane => {
         const section = laneElements[lane].closest('section');
@@ -125,7 +192,7 @@ function setupLaneClickHandlers() {
         header.style.cursor = 'pointer';
         header.title = 'Nhấn để chọn lane này';
         header.addEventListener('click', () => {
-            // only allow activating lanes that are not yet selected
+            // chỉ cho kích hoạt lane chưa được chọn
             if (selectedPlayers[lane]) return;
             const idx = selectionOrder.indexOf(lane);
             if (idx >= 0) {
@@ -138,7 +205,7 @@ function setupLaneClickHandlers() {
 }
 
 /* =====================================
-   LOAD FIREBASE
+    TẢI DỮ LIỆU FIREBASE
 ===================================== */
 
 async function loadPlayers() {
@@ -183,7 +250,7 @@ async function loadPlayers() {
 }
 
 /* =====================================
-   RANDOM HELPER
+    HÀM TRỢ GIÚP NGẪU NHIÊN
 ===================================== */
 
 function shuffle(arr) {
@@ -216,12 +283,12 @@ function randomFive(players) {
 }
 
 /* =====================================
-   SHOP GENERATION
+    TẠO SHOP
 ===================================== */
 
 function generateShop() {
 
-    // For each lane, pick up to one player per cost tier 1..5
+    // Với mỗi lane, chọn tối đa 1 player cho mỗi mức giá 1..5
     function shopByLane(laneName) {
         const shop = [];
         for (let cost = 1; cost <= 5; cost++) {
@@ -239,7 +306,7 @@ function generateShop() {
 }
 
 /* =====================================
-   RENDER SHOP
+    VẼ SHOP LÊN DOM
 ===================================== */
 
 function renderShop() {
@@ -368,7 +435,7 @@ function renderLane(
 }
 
 /* =====================================
-   BUY PLAYER
+    MUA PLAYER
 ===================================== */
 
 function buyPlayer(
@@ -411,7 +478,7 @@ function buyPlayer(
     selectedPlayers[lane] =
         player;
 
-    // advance to next lane index
+    // tiến tới chỉ số lane tiếp theo (nếu đang ở lane hiện tại)
     const idx = selectionOrder.indexOf(lane);
     if (idx >= 0 && currentSelectionIndex === idx) {
         currentSelectionIndex = Math.min(currentSelectionIndex + 1, selectionOrder.length - 1);
@@ -419,53 +486,29 @@ function buyPlayer(
 
     renderShop();
 
-    renderSelectedPlayers();
+    renderSelectedPlayersUI(selectedPlayers, selectionOrder, gold, 'selectedPlayers', 'gold', onDeselect);
 
     updateVisibleLane();
 }
 
 /* =====================================
-   SELECTED TEAM
+   ĐỘI HÌNH ĐÃ CHỌN (đã tách thành module)
 ===================================== */
+// Hàm renderSelectedPlayers đã được di chuyển vào selectedDisplay.js
 
-function renderSelectedPlayers() {
-
-    selectedContainer.innerHTML = "";
-
-    // render in selectionOrder so players appear in role order
-    selectionOrder.forEach(lane => {
-        const player = selectedPlayers[lane];
-        if (!player) return;
-
-        const div = document.createElement("div");
-        div.className = "selected-card";
-
-        div.innerHTML = `
-            <h3>${player.name}</h3>
-            <p>${player.team}</p>
-            <p>Giá: ${player.cost}</p>
-        `;
-
-        // clicking selected card deselects and returns to that lane
-        div.addEventListener('click', () => {
-            selectedPlayers[lane] = null;
-            gold += Number(player.cost) || 0;
-            const laneIdx = selectionOrder.indexOf(lane);
-            if (laneIdx >= 0) currentSelectionIndex = laneIdx;
-            renderShop();
-            renderSelectedPlayers();
-            updateVisibleLane();
-        });
-
-        selectedContainer.appendChild(div);
-    });
-
-    goldEl.textContent =
-        gold;
+// callback khi người dùng bấm bỏ chọn trên thẻ đã chọn
+function onDeselect(lane, player) {
+    selectedPlayers[lane] = null;
+    gold += Number(player.cost) || 0;
+    const laneIdx = selectionOrder.indexOf(lane);
+    if (laneIdx >= 0) currentSelectionIndex = laneIdx;
+    renderShop();
+    renderSelectedPlayersUI(selectedPlayers, selectionOrder, gold, 'selectedPlayers', 'gold', onDeselect);
+    updateVisibleLane();
 }
 
 /* =====================================
-   REFRESH SHOP
+    LÀM MỚI SHOP
 ===================================== */
 
 refreshBtn.addEventListener(
@@ -492,7 +535,7 @@ refreshBtn.addEventListener(
 );
 
 /* =====================================
-   TEAM CHECK
+    KIỂM TRA ĐỘI HÌNH
 ===================================== */
 
 function teamCompleted() {
@@ -507,7 +550,7 @@ function teamCompleted() {
 }
 
 /* =====================================
-   TEAM POWER
+    TÍNH SỨC MẠNH ĐỘI
 ===================================== */
 
 function calculateTeamPower() {
@@ -549,7 +592,7 @@ function calculateTeamPower() {
 }
 
 /* =====================================
-   BOT POWER
+    TÍNH SỨC MẠNH BOT
 ===================================== */
 
 function calculateBotPower(
@@ -588,7 +631,7 @@ function calculateBotPower(
 }
 
 /* =====================================
-   RANDOM PLAYER HELPER
+    TRỢ GIÚP CHỌN NGẪU NHIÊN
 ===================================== */
 
 function randomPick(
@@ -605,13 +648,189 @@ function randomPick(
     );
 }
 
-// sleep helper
+/* =====================================
+    DÒNG PHÂN TÍCH (commentary)
+    Các câu dẫn cho thắng/thua/trung lập
+===================================== */
+
+const winLines = [
+    'Đội ta có chiến công đầu',
+    'Đội ăn được rùa thần',
+    'Đội ăn được lord',
+    'Solo kill ở đường giữa',
+    'Solo kill ở đường vàng',
+    'Solo kill ở đường kinh nghiệm',
+    'Quét sạch giành cho team ta'
+];
+
+const loseLines = [
+    'Đội bot có chiến công đầu',
+    'Đội bot ăn được rùa thần',
+    'Đội bot ăn được lord',
+    'Team ta bị Solo kill ở đường giữa',
+    'Team ta bị Solo kill ở đường vàng',
+    'Team ta bị Solo kill ở đường kinh nghiệm',
+    'Quét sạch giành cho đội bot'
+];
+
+const neutralLines = [
+    'Rừng bên ta cướp được rùa',
+    'Rừng bên ta cướp được lord'
+];
+
+function pickRandomLine(cat) {
+    if (cat === 'win') return winLines[Math.floor(Math.random() * winLines.length)];
+    if (cat === 'lose') return loseLines[Math.floor(Math.random() * loseLines.length)];
+    return neutralLines[Math.floor(Math.random() * neutralLines.length)];
+}
+
+const playerWinPatterns = [
+    ['win','neutral','win'],
+    ['lose','neutral','win'],
+    ['neutral','win','win'],
+    ['win','win','win'],
+    ['lose','lose','win']
+];
+
+const botWinPatterns = [
+    ['lose','neutral','lose'],
+    ['win','neutral','lose'],
+    ['neutral','lose','lose'],
+    ['lose','lose','lose'],
+    ['win','win','lose']
+];
+
+function generateCommentary(winner) {
+    // choose patterns but avoid patterns that end with neutral
+    const patterns = winner === 'PLAYER' ? playerWinPatterns : botWinPatterns;
+    const validPatterns = patterns.filter(p => p[p.length - 1] !== 'neutral');
+    const usePatterns = validPatterns.length ? validPatterns : patterns;
+    const pattern = usePatterns[Math.floor(Math.random() * usePatterns.length)];
+
+    const isFirstBlood = txt => typeof txt === 'string' && txt.toLowerCase().includes('chiến công đầu');
+    const isRune = txt => typeof txt === 'string' && txt.toLowerCase().includes('rùa');
+    const isLord = txt => typeof txt === 'string' && txt.toLowerCase().includes('lord');
+    const isSolo = txt => typeof txt === 'string' && txt.toLowerCase().includes('solo');
+
+    const result = [];
+    let firstBloodShown = false;
+    let hasSolo = false;
+    let hasLord = false;
+    let hasRune = false;
+
+    for (let i = 0; i < pattern.length; i++) {
+        const cat = pattern[i];
+
+        let attempts = 0;
+        let line = pickRandomLine(cat);
+
+        while (attempts < 30) {
+            const fb = isFirstBlood(line);
+            const rn = isRune(line);
+            const ld = isLord(line);
+            const sl = isSolo(line);
+
+            // rule: if we've already shown a first-blood, don't show another
+            if (fb && firstBloodShown) {
+                line = pickRandomLine(cat);
+                attempts++;
+                continue;
+            }
+
+            // rule: if we already have a solo line, don't allow a first-blood
+            if (fb && hasSolo) {
+                line = pickRandomLine(cat);
+                attempts++;
+                continue;
+            }
+
+            // rule: if we already have a first-blood, don't allow solo
+            if (sl && firstBloodShown) {
+                line = pickRandomLine(cat);
+                attempts++;
+                continue;
+            }
+
+            // rule: lord and rùa cannot both appear
+            if (ld && hasRune) {
+                line = pickRandomLine(cat);
+                attempts++;
+                continue;
+            }
+            if (rn && hasLord) {
+                line = pickRandomLine(cat);
+                attempts++;
+                continue;
+            }
+
+            // rule: neutral cannot be last (double-check)
+            if (cat === 'neutral' && i === pattern.length - 1) {
+                line = pickRandomLine(cat);
+                attempts++;
+                continue;
+            }
+
+            // accepted
+            break;
+        }
+
+        // update flags
+        if (isFirstBlood(line)) firstBloodShown = true;
+        if (isSolo(line)) hasSolo = true;
+        if (isLord(line)) hasLord = true;
+        if (isRune(line)) hasRune = true;
+
+        result.push({ cat, text: line });
+    }
+
+    // after selection, final sweep: if both lord and rune present, remove rune preference by replacing rune lines
+    if (hasLord && hasRune) {
+        for (let i = 0; i < result.length; i++) {
+            if (isRune(result[i].text)) {
+                // try to replace with another neutral or same category non-rune
+                const cat = result[i].cat;
+                let replaced = false;
+                for (let a = 0; a < 10; a++) {
+                    const cand = pickRandomLine(cat);
+                    if (!isRune(cand) && !(isFirstBlood(cand) && firstBloodShown && !isFirstBlood(result[i].text))) {
+                        result[i].text = cand;
+                        replaced = true;
+                        break;
+                    }
+                }
+                if (replaced) {
+                    hasRune = result.some(r => isRune(r.text));
+                    if (!hasRune) break;
+                }
+            }
+        }
+    }
+
+    // ensure no neutral at last position (final safety)
+    if (result.length > 0 && result[result.length - 1].cat === 'neutral') {
+        // try swap with earlier non-neutral
+        for (let j = result.length - 2; j >= 0; j--) {
+            if (result[j].cat !== 'neutral') {
+                const tmp = result[j];
+                result[j] = result[result.length - 1];
+                result[result.length - 1] = tmp;
+                break;
+            }
+        }
+    }
+
+    return result;
+}
+
+/* (commentary removed in rollback) */
+
+// hàm tạm dừng (sleep)
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /* =====================================
-   GET BOT ROSTER
+    TẠO DANH SÁCH BOT THEO COST
 ===================================== */
 
 function createBotRosterByCost(
@@ -629,7 +848,7 @@ function createBotRosterByCost(
     const roster = [];
 
     lanes.forEach(lane => {
-        // prefer exact cost match (compare numbers), else fallback to highest cost in lane
+        // ưu tiên chọn player có đúng cost, nếu không có thì chọn player cost cao nhất trong lane
         const pool = allPlayers.filter(p => p.lane === lane && Number(p.cost) === cost);
 
         if (pool.length > 0) {
@@ -646,8 +865,8 @@ function createBotRosterByCost(
 }
 
 /* =====================================
-   SEMI FINAL BOT
-   3 COST4 + 2 COST5
+    BOT BÁN KẾT (semi-final)
+    cấu trúc: 3 người cost4 + 2 người cost5
 ===================================== */
 
 function createSemiFinalBot() {
@@ -702,8 +921,8 @@ function createSemiFinalBot() {
 }
 
 /* =====================================
-   FINAL BOT
-   4 players cost 5 + 1 player cost 4
+    BOT CHUNG KẾT
+    4 người cost 5 + 1 người cost 4
 ===================================== */
 
 function createFinalBot() {
@@ -714,7 +933,6 @@ function createFinalBot() {
         "mage",
         "jungle"
     ];
-
     // pick one lane to be cost 4, others cost 5
     const fourLane = randomPick(lanes, 1)[0];
 
@@ -740,7 +958,7 @@ function createFinalBot() {
 }
 
 /* =====================================
-   SINGLE GAME
+    PHIÊN TRANH (1 trận)
 ===================================== */
 
 function playSingleGame(
@@ -767,7 +985,7 @@ function playSingleGame(
 }
 
 /* =====================================
-   GENERATE SERIES SCORE
+    TẠO KẾT QUẢ LOẠT (series)
 ===================================== */
 
 function generateSeriesScore(
@@ -872,10 +1090,10 @@ function generateSeriesScore(
     };
 }
 
-// simulate a series with per-game results, biased toward the stronger side
+// mô phỏng loạt trận với kết quả từng ván, thiên về bên mạnh hơn
 function simulateSeries(playerPower, botPower, targetWins) {
     const playerIsFavored = playerPower > botPower;
-    const chanceFav = 0.65; // favored side win chance per game
+    const chanceFav = 0.65; // xác suất thắng mỗi ván cho bên được ưu thế
     const chancePlayerWin = playerIsFavored ? chanceFav : (1 - chanceFav);
 
     let playerWins = 0, botWins = 0;
@@ -888,7 +1106,7 @@ function simulateSeries(playerPower, botPower, targetWins) {
         if (gameWinner === 'PLAYER') playerWins++; else botWins++;
     }
 
-    // ensure overall winner matches stronger side — if not, force by flipping last games
+    // đảm bảo kết quả loạt trận phù hợp với bên mạnh hơn — nếu không, sửa lại bằng cách đảo ván cuối
     const expected = playerIsFavored ? 'PLAYER' : 'BOT';
     const actual = playerWins > botWins ? 'PLAYER' : 'BOT';
     if (actual !== expected) {
@@ -925,7 +1143,7 @@ function simulateSeries(playerPower, botPower, targetWins) {
 }
 
 /* =====================================
-   TOURNAMENT RUNNER
+    CHẠY GIẢI ĐẤU
 ===================================== */
 
 async function startTournament() {
@@ -936,13 +1154,23 @@ async function startTournament() {
 
     const matchLog = document.getElementById('matchLog');
     const tournamentScreen = document.getElementById('tournamentScreen');
-    const resultModal = document.getElementById('resultModal');
-    const resultTitle = document.getElementById('resultTitle');
-    const resultRoster = document.getElementById('resultRoster');
 
     matchLog.innerHTML = '';
-    resultModal.classList.add('hidden');
+    hideResultModal();
     tournamentScreen.classList.remove('hidden');
+
+    // attempt to play background music on tournament start (user gesture may allow autoplay)
+    try {
+        if (bgMusicPlayer && !musicPlaying) {
+            // attempt to play (may be blocked until user interacts)
+            bgMusicPlayer.playVideo();
+            musicPlaying = true;
+            const musicToggle = document.getElementById('musicToggle');
+            if (musicToggle) musicToggle.textContent = defaultMusicLabelOn;
+        }
+    } catch (e) {
+        // ignore play errors
+    }
 
     const playerRoster = selectionOrder.map(l => selectedPlayers[l]).filter(Boolean);
     const playerPower = calculateTeamPower();
@@ -960,19 +1188,19 @@ async function startTournament() {
         const botRoster = r.builder();
         let botPower = calculateBotPower(botRoster);
 
-        // random events: player clutch (10%) increases player power by 20%; bot stumble (20%) reduces bot power by 30%
+        // sự kiện ngẫu nhiên: đột biến người chơi (20%) tăng sức mạnh; bot sẩy chân (20%) giảm sức mạnh (mức giảm 17.5%)
         let playerEvent = false;
         let botEvent = false;
 
-        // Log round header (hide power values)
+        // tạo header vòng (ẩn giá trị sức mạnh)
         const header = document.createElement('div');
         header.className = 'round-header';
         header.textContent = `${r.label}`;
 
-        // determine random events
-        if (Math.random() < 0.10) {
+        // xác định sự kiện ngẫu nhiên
+        if (Math.random() < 0.20) {
             playerEvent = true;
-            // apply player clutch +20%
+            // áp dụng đột biến người chơi +20%
             playerPower = Number((playerPower * 1.2).toFixed(2));
             const badge = document.createElement('span');
             badge.className = 'event-badge event-player';
@@ -982,11 +1210,11 @@ async function startTournament() {
 
         if (Math.random() < 0.20) {
             botEvent = true;
-            // apply bot stumble -30%
-            botPower = Number((botPower * 0.7).toFixed(2));
+            // áp dụng bot sẩy chân -20%
+            botPower = Number((botPower * 0.80).toFixed(2));
             const badge2 = document.createElement('span');
             badge2.className = 'event-badge event-bot';
-            badge2.textContent = 'Bot xẩy chân -30%';
+            badge2.textContent = 'Bot sẩy chân -20%';
             header.appendChild(badge2);
         }
 
@@ -998,19 +1226,13 @@ async function startTournament() {
             const winner = playerPower > botPower ? 'PLAYER' : 'BOT';
             if (winner === 'PLAYER') playerWins = 1; else botWins = 1;
             games = [playerWins === 1 ? 'PLAYER' : 'BOT'];
-            const row = document.createElement('div');
-            row.className = 'match-row';
-            row.textContent = `${r.label}: ${winner === 'PLAYER' ? 'Bạn thắng' : 'Bot thắng'} (${playerWins}-${botWins})`;
-            matchLog.appendChild(row);
+            // không hiển thị dòng tóm tắt: hiện theo từng ván với bình luận
         } else {
             const series = simulateSeries(playerPower, botPower, r.targetWins);
             playerWins = series.playerWins;
             botWins = series.botWins;
             games = series.games;
-            const row = document.createElement('div');
-            row.className = 'match-row';
-            row.textContent = `${r.label} (BO${r.targetWins*2-1}): Kết quả ${playerWins}-${botWins}`;
-            matchLog.appendChild(row);
+            // không hiển thị dòng tóm tắt: hiện theo từng ván với bình luận
         }
 
         // create horizontal round result panel
@@ -1061,75 +1283,156 @@ async function startTournament() {
 
         roundResult.appendChild(playerPanel);
         roundResult.appendChild(botPanel);
-        // show per-game results inside this round
-        const gamesList = document.createElement('div');
-        gamesList.className = 'games-list';
-        games.forEach((g, idx) => {
+
+        // show roster (ảnh 1) first
+        matchLog.appendChild(roundResult);
+
+        // then show Best-of panel (ảnh 2)
+        const bestOfPanel = document.createElement('div');
+        bestOfPanel.className = 'best-of-panel';
+
+        const boTitle = document.createElement('div');
+        boTitle.className = 'bo-title';
+        boTitle.textContent = `Best of ${r.targetWins * 2 - 1}`;
+        bestOfPanel.appendChild(boTitle);
+
+        // create match boxes
+        const boxes = document.createElement('div');
+        boxes.className = 'match-boxes';
+        for (let b = 0; b < (r.targetWins * 2 - 1); b++) {
+            const box = document.createElement('div');
+            box.className = 'match-box';
+            box.dataset.index = b;
+            box.innerHTML = `
+                <div class="box-label">M${b + 1}</div>
+                <div class="box-score"></div>
+            `;
+            boxes.appendChild(box);
+        }
+        bestOfPanel.appendChild(boxes);
+
+        // commentary area (will be cleared after each game's 3 lines)
+        const commentaryContainer = document.createElement('div');
+        commentaryContainer.className = 'commentary-container';
+        bestOfPanel.appendChild(commentaryContainer);
+
+        // game results area (shows per-game result after clearing commentary)
+        const resultsContainer = document.createElement('div');
+        resultsContainer.className = 'results-container';
+        bestOfPanel.appendChild(resultsContainer);
+
+        matchLog.appendChild(bestOfPanel);
+
+        // iterate games and display sequence: highlight box -> show 3 lines -> clear -> show result
+        for (let idx = 0; idx < games.length; idx++) {
+            const g = games[idx];
+
+            // highlight current box
+            const currentBox = boxes.querySelector(`.match-box[data-index="${idx}"]`);
+            if (currentBox) {
+                currentBox.classList.add('active');
+            }
+
+            // show 3 commentary lines sequentially
+            const commentary = generateCommentary(g); // [{cat,text},...]
+            for (let ci = 0; ci < commentary.length; ci++) {
+                const item = commentary[ci];
+                const el = document.createElement('div');
+                el.className = 'commentary-line';
+                if (item.cat === 'win') el.classList.add('win-line');
+                else if (item.cat === 'lose') el.classList.add('lose-line');
+                else el.classList.add('neutral-line');
+                el.textContent = item.text;
+                commentaryContainer.appendChild(el);
+
+                // scroll
+                const matchLogEl = document.getElementById('matchLog');
+                if (matchLogEl) matchLogEl.scrollTop = matchLogEl.scrollHeight;
+
+                await sleep(2000);
+            }
+
+            // after showing 3 lines, remove them
+            commentaryContainer.innerHTML = '';
+
+            // show result for this game
             const gi = document.createElement('div');
             gi.className = 'game-item';
             gi.textContent = `Ván ${idx + 1}: ${g === 'PLAYER' ? 'Bạn thắng' : 'Bot thắng'}`;
             if (g === 'PLAYER') gi.classList.add('game-win'); else gi.classList.add('game-lose');
-            gamesList.appendChild(gi);
-        });
+            resultsContainer.appendChild(gi);
 
-        roundResult.appendChild(gamesList);
-        matchLog.appendChild(roundResult);
+            // mark box as win/lose and update label
+            if (currentBox) {
+                currentBox.classList.remove('active');
+                const scoreEl = currentBox.querySelector('.box-score');
+                if (g === 'PLAYER') {
+                    currentBox.classList.add('box-win');
+                    if (scoreEl) scoreEl.textContent = 'Bạn thắng';
+                    currentBox.title = 'Bạn thắng';
+                } else {
+                    currentBox.classList.add('box-lose');
+                    if (scoreEl) scoreEl.textContent = 'Bot thắng';
+                    currentBox.title = 'Bot thắng';
+                }
+            }
 
-        // wait 5 seconds so user can view this round
-        await sleep(5000);
+            // scroll to view
+            const matchLogEl2 = document.getElementById('matchLog');
+            if (matchLogEl2) matchLogEl2.scrollTop = matchLogEl2.scrollHeight;
 
-        // if lost, show failure and stop
+            // short pause before next game
+            await sleep(2000);
+        }
+
+        // đợi 1s để người dùng xem khối vòng đấu trước khi tiếp tục
+        await sleep(1000);
+
+        // ẩn/đóng khối trận này sau khi đã có kết quả chung cuộc
+        try {
+            if (header && header.parentNode) header.parentNode.removeChild(header);
+            if (roundResult && roundResult.parentNode) roundResult.parentNode.removeChild(roundResult);
+            if (bestOfPanel && bestOfPanel.parentNode) bestOfPanel.parentNode.removeChild(bestOfPanel);
+        } catch (e) {
+            // ignore
+        }
+
+        // nếu thua, hiển thị thất bại và dừng
         if (botWins > playerWins) {
-            resultTitle.textContent = `THẤT BẠI TẠI ${r.label.toUpperCase()} `;
-            resultRoster.innerHTML = '';
-            const lostTitle = document.createElement('h3');
-            lostTitle.textContent = 'ĐỘI HÌNH BOT:';
-            resultRoster.appendChild(lostTitle);
-            botRoster.forEach(p => {
-                const el = document.createElement('div');
-                el.textContent = `${p.name} (${p.team}) - Giá: ${p.cost}`;
-                resultRoster.appendChild(el);
-            });
+            const title = `THẤT BẠI TẠI ${r.label.toUpperCase()} `;
 
             // save last result for manual view
             lastResultData = {
-                title: resultTitle.textContent,
+                title,
                 roster: botRoster.map(p => ({ name: p.name, team: p.team, cost: p.cost }))
             };
 
-            resultModal.classList.remove('hidden');
+            showResultModal(title, botRoster.map(p => ({ name: p.name, team: p.team, cost: p.cost })));
             return;
         }
-        // else continue to next round
+        // nếu không, tiếp tục vòng tiếp theo
     }
 
-    // if all rounds passed
-    resultTitle.textContent = `BẠN LÀ NHÀ VÔ ĐỊCH VỚI ĐỘI HÌNH:`;
-    resultRoster.innerHTML = '';
-    playerRoster.forEach(p => {
-        const el = document.createElement('div');
-        el.textContent = `${p.name} (${p.team}) - Giá: ${p.cost}`;
-        resultRoster.appendChild(el);
-    });
-
+    // nếu vượt qua tất cả các vòng
+    const title = `BẠN LÀ NHÀ VÔ ĐỊCH VỚI ĐỘI HÌNH:`;
     // save last result (victory)
     lastResultData = {
-        title: resultTitle.textContent,
+        title,
         roster: playerRoster.map(p => ({ name: p.name, team: p.team, cost: p.cost }))
     };
 
-    resultModal.classList.remove('hidden');
+    showResultModal(title, playerRoster.map(p => ({ name: p.name, team: p.team, cost: p.cost })));
 }
 
-// wire button
+// gắn sự kiện nút
 const startBtn = document.getElementById('startTournament');
 if (startBtn) startBtn.addEventListener('click', startTournament);
 
-// New Game button handler
+// Xử lý nút Game Mới
 const newGameBtn = document.getElementById('newGameBtn');
 if (newGameBtn) newGameBtn.addEventListener('click', () => {
     // reset state
-    gold = 22;
+    gold = 21;
     refreshRemain = 4;
     selectedPlayers = { marksman: null, support: null, fighter: null, mage: null, jungle: null };
     currentSelectionIndex = 0;
@@ -1137,7 +1440,7 @@ if (newGameBtn) newGameBtn.addEventListener('click', () => {
 
     generateShop();
     renderShop();
-    renderSelectedPlayers();
+    renderSelectedPlayersUI(selectedPlayers, selectionOrder, gold, 'selectedPlayers', 'gold', onDeselect);
     updateVisibleLane();
 
     // hide tournament/result UI
@@ -1147,14 +1450,8 @@ if (newGameBtn) newGameBtn.addEventListener('click', () => {
     if (resultModalEl) resultModalEl.classList.add('hidden');
 });
 
-// Review button inside result modal
+// Remove/hide review button (not used)
 const reviewBtn = document.getElementById('reviewBtn');
-if (reviewBtn) reviewBtn.addEventListener('click', () => {
-    const resultModalEl = document.getElementById('resultModal');
-    const tournamentScreen = document.getElementById('tournamentScreen');
-    if (resultModalEl) resultModalEl.classList.add('hidden');
-    if (tournamentScreen) tournamentScreen.classList.remove('hidden');
-    // scroll to match log
-    const matchLogEl = document.getElementById('matchLog');
-    if (matchLogEl) matchLogEl.scrollIntoView({ behavior: 'smooth' });
-});
+if (reviewBtn) {
+    try { reviewBtn.style.display = 'none'; } catch (e) {}
+}

@@ -610,6 +610,14 @@ height:24px;
 .game-win{color:#b7ffbf;background:rgba(0,128,0,0.06)}
 .game-lose{color:#ffb4b4;background:rgba(128,0,0,0.04)}
 
+/* commentary lines styling */
+.commentary-line{font-size:20px;font-weight:800;padding:10px 14px;border-radius:8px;margin:8px 0;text-align:center;min-width:60%}
+.commentary-line.win-line{color:#b7ffbf;background:rgba(0,128,0,0.06)}
+.commentary-line.lose-line{color:#ffb4b4;background:rgba(128,0,0,0.04)}
+.commentary-line.neutral-line{color:#fff;background:rgba(255,255,255,0.02)}
+
+.result-item{margin-top:6px;padding:10px 14px;border-radius:8px;background:rgba(255,255,255,0.02);font-weight:800}
+
 /* event badges */
 .event-badge{display:inline-block;margin-left:10px;padding:4px 8px;border-radius:6px;font-weight:700;font-size:12px}
 .event-player{background:#ffe58a;color:#000}
@@ -618,3 +626,18 @@ height:24px;
 @media(max-width:720px){
 	.round-result{flex-direction:column}
 }
+
+/* Best-of / match boxes styles */
+.best-of-panel{margin:12px 0;padding:12px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005));border:1px solid rgba(255,255,255,0.02)}
+.bo-title{font-weight:800;margin-bottom:8px;color:#dfefff}
+.match-boxes{display:flex;gap:8px;align-items:flex-start}
+.match-box{width:72px;height:72px;border-radius:8px;background:rgba(255,255,255,0.02);display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.03)}
+.match-box .box-label{font-weight:800;color:#9fbfff}
+.match-box .box-score{font-size:13px;margin-top:6px;color:#fff;font-weight:800}
+.match-box.active{box-shadow:0 0 0 3px rgba(120,200,255,0.06);transform:translateY(-4px)}
+.match-box.box-win{background:linear-gradient(180deg, rgba(0,80,0,0.16), rgba(0,120,0,0.06));border-color:rgba(0,120,0,0.3)}
+.match-box.box-win .box-score{color:#b7ffbf}
+.match-box.box-lose{background:linear-gradient(180deg, rgba(80,0,0,0.12), rgba(120,0,0,0.04));border-color:rgba(160,0,0,0.25)}
+.match-box.box-lose .box-score{color:#ffb4b4}
+.commentary-container{margin-top:12px}
+.results-container{margin-top:12px}
