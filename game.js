@@ -40,6 +40,12 @@ let currentSelectionIndex = 0;
 
 let lastResultData = null; // lưu kết quả cuối cùng để nút 'XEM LẠI' sử dụng
 
+// tournament control state for rematch feature
+let isTournamentRunning = false;
+let currentRoundIndex = 0;
+let rematchRequested = false;
+let rematchRoundIndex = null;
+
 /* =====================================
     DOM (tham chiếu phần tử)
 ===================================== */
@@ -1173,7 +1179,12 @@ async function startTournament() {
     }
 
     const playerRoster = selectionOrder.map(l => selectedPlayers[l]).filter(Boolean);
-    const playerPower = calculateTeamPower();
+    let playerPower = calculateTeamPower();
+
+    // reset rematch state
+    isTournamentRunning = true;
+    rematchRequested = false;
+    rematchRoundIndex = null;
 
     // Define rounds
     const rounds = [
@@ -1183,10 +1194,21 @@ async function startTournament() {
         { label: 'Vòng chung kết', builder: () => createFinalBot(), targetWins: 4 }
     ];
 
-    for (let i = 0; i < rounds.length; i++) {
+    // show rematch button while tournament is visible
+    const rematchBtn = document.getElementById('rematchBtn');
+    if (rematchBtn) rematchBtn.style.display = 'inline-block';
+
+    let i = 0;
+    while (i < rounds.length) {
+        currentRoundIndex = i;
         const r = rounds[i];
+        const roundStartChildIndex = matchLog.children.length;
         const botRoster = r.builder();
         let botPower = calculateBotPower(botRoster);
+
+        // snapshot powers so we can restore on rematch
+        const playerPowerBefore = playerPower;
+        const botPowerBefore = botPower;
 
         // sự kiện ngẫu nhiên: đột biến người chơi (20%) tăng sức mạnh; bot sẩy chân (20%) giảm sức mạnh (mức giảm 17.5%)
         let playerEvent = false;
@@ -1385,8 +1407,29 @@ async function startTournament() {
             await sleep(2000);
         }
 
+
         // đợi 1s để người dùng xem khối vòng đấu trước khi tiếp tục
         await sleep(1000);
+
+        // nếu người dùng yêu cầu rematch cho vòng này, xóa UI phần vòng này về trước và replay
+        if (rematchRequested && rematchRoundIndex === i) {
+            // remove any children appended for this round
+            try {
+                while (matchLog.children.length > roundStartChildIndex) {
+                    matchLog.removeChild(matchLog.lastChild);
+                }
+            } catch (e) {}
+
+            // restore powers
+            playerPower = playerPowerBefore;
+            botPower = botPowerBefore;
+
+            // reset rematch flag and replay same round
+            rematchRequested = false;
+            rematchRoundIndex = null;
+            // continue without incrementing i (replay same round)
+            continue;
+        }
 
         // ẩn/đóng khối trận này sau khi đã có kết quả chung cuộc
         try {
@@ -1407,10 +1450,16 @@ async function startTournament() {
                 roster: botRoster.map(p => ({ name: p.name, team: p.team, cost: p.cost }))
             };
 
+            // hide rematch button and mark tournament ended
+            if (rematchBtn) rematchBtn.style.display = 'none';
+            isTournamentRunning = false;
+
             showResultModal(title, botRoster.map(p => ({ name: p.name, team: p.team, cost: p.cost })));
             return;
         }
+
         // nếu không, tiếp tục vòng tiếp theo
+        i++;
     }
 
     // nếu vượt qua tất cả các vòng
@@ -1422,6 +1471,10 @@ async function startTournament() {
     };
 
     showResultModal(title, playerRoster.map(p => ({ name: p.name, team: p.team, cost: p.cost })));
+    // hide rematch and mark not running
+    const rematchBtnNow = document.getElementById('rematchBtn');
+    if (rematchBtnNow) rematchBtnNow.style.display = 'none';
+    isTournamentRunning = false;
 }
 
 // gắn sự kiện nút
@@ -1448,7 +1501,26 @@ if (newGameBtn) newGameBtn.addEventListener('click', () => {
     const resultModalEl = document.getElementById('resultModal');
     if (tournamentScreen) tournamentScreen.classList.add('hidden');
     if (resultModalEl) resultModalEl.classList.add('hidden');
+    // hide rematch and mark not running
+    const rematchBtnNow = document.getElementById('rematchBtn');
+    if (rematchBtnNow) rematchBtnNow.style.display = 'none';
+    isTournamentRunning = false;
 });
+
+// Rematch button: request replay of current round and subsequent rounds
+const rematchBtnEl = document.getElementById('rematchBtn');
+if (rematchBtnEl) {
+    rematchBtnEl.addEventListener('click', () => {
+        if (!isTournamentRunning) return;
+        rematchRequested = true;
+        rematchRoundIndex = currentRoundIndex;
+        // provide quick feedback
+        rematchBtnEl.textContent = 'Yêu cầu thi đấu lại đã gửi';
+        setTimeout(() => {
+            if (rematchBtnEl) rematchBtnEl.textContent = 'Thi đấu lại vòng này';
+        }, 1500);
+    });
+}
 
 // Remove/hide review button (not used)
 const reviewBtn = document.getElementById('reviewBtn');
