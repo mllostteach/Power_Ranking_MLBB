@@ -928,7 +928,7 @@ function createSemiFinalBot() {
 
 /* =====================================
     BOT CHUNG KẾT
-    4 người cost 5 + 1 người cost 4
+    5 người cost 5
 ===================================== */
 
 function createFinalBot() {
@@ -939,13 +939,11 @@ function createFinalBot() {
         "mage",
         "jungle"
     ];
-    // pick one lane to be cost 4, others cost 5
-    const fourLane = randomPick(lanes, 1)[0];
 
     const roster = [];
 
     lanes.forEach(lane => {
-        const cost = lane === fourLane ? 4 : 5;
+        const cost = 5;
 
         const pool = allPlayers.filter(p => p.lane === lane && Number(p.cost) === cost);
 
