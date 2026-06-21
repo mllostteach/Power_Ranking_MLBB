@@ -691,7 +691,7 @@ function calculateBotPower(
     const power =
         avgSkill * 1.3 +
         avgClutch * 1.1 +
-        avgSynergy * 1.4;
+        avgSynergy * 1.35;
 
     return Number(
         power.toFixed(2)
