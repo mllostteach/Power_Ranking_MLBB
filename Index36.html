@@ -9,6 +9,7 @@
  
     <link rel="stylesheet" href="style.css">
 
+    <script src="theme.js" defer></script>
     <script type="module" src="firebase.js"></script>
     <script type="module" src="game.js"></script>
 </head>
@@ -43,23 +44,21 @@
                 </div>
             </div>
 
+            <button id="themeToggleBtn">🌙 Tối</button>
         </div>
+
+        <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
     </div>
 
 
 
-    <h1 class="title">
-        MỜ LỜ MẤT NÃO
-    </h1>
-       <h2 class="title">Bạn sẽ có 21 đồng </h2>
-    <h3 class="title">Màn hình sẽ cho bạn ra 5 player với mức giá từ 1 đến 5 vàng trong 1 lane , Bạn sẽ mua player và bạn có thể làm mới tối đa 4 lần .</h3>
-<h2 class="title">Sau khi bạn chọn xong, nhấn bắt đầu giải đấu và chinh phục cúp ( trong lòng người hâm mộ) </h2>
-    
+ 
+    </section>
     <div class="top-bar">
 
         <div class="gold-box">
             🪙 Vàng:
-                <span id="gold">21</span>
+                <span id="gold">20</span>
         </div>
 
         <div class="refresh-box">
@@ -71,9 +70,25 @@
         <button id="refreshBtn">
             Làm mới
         </button>
-            <button id="musicToggle">🔊 Bật nhạc</button>
+        <select id="musicSelect" style="padding:8px;border-radius:8px;border:1px solid var(--border-light);background:var(--bg-secondary);color:var(--text-primary);margin-left:8px">
+            <option value="M7" selected>M7 (mặc định)</option>
+            <option value="M4">M4</option>
+            <option value="M5">M5</option>
+            <option value="M6">M6</option>
+            <option value="M3">M3</option>
+        </select>
+        <button id="musicToggle">🔊 Bật nhạc</button>
 
     </div>
+    <!-- Resource choice modal (shows before team selection) -->
+    <div id="resourceChoice" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:1000;">
+        <div style="background:#fff;padding:20px;border-radius:8px;max-width:680px;width:90%;text-align:center;">
+            <h3>Chọn tài nguyên (chọn 1)</h3>
+            <div id="resourceCards" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:12px;"></div>
+            <div style="margin-top:12px;font-size:13px;color:#555">Chọn 1 thẻ để nhận hiệu ứng trước khi chọn đội hình</div>
+        </div>
+    </div>
+
     <div id="laneContainer">
 
         <!-- Xạ thủ -->

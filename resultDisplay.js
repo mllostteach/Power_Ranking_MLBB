@@ -16,6 +16,17 @@ export function showResultModal(title, roster) {
     }
 
     if (resultModal) resultModal.classList.remove('hidden');
+    // scroll to result area for user
+    try {
+        if (resultModal && resultModal.scrollIntoView) {
+            resultModal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+            const tournamentScreen = document.getElementById('tournamentScreen');
+            if (tournamentScreen && tournamentScreen.scrollIntoView) tournamentScreen.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    } catch (e) {
+        // ignore
+    }
 }
 
 export function hideResultModal() {

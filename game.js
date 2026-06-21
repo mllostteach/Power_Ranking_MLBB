@@ -12,7 +12,7 @@ import { showResultModal, hideResultModal } from './resultDisplay.js';
     (Game state)
 ===================================== */
 
-let gold = 21;
+let gold = 20;
 
 let refreshRemain = 4;
 
@@ -45,6 +45,17 @@ let isTournamentRunning = false;
 let currentRoundIndex = 0;
 let rematchRequested = false;
 let rematchRoundIndex = null;
+// selected resource chosen before team pick
+let selectedResource = null;
+
+const RESOURCE_POOL = [
+    'Tăng kỹ năng',
+    'tăng đột biến',
+    'tăng phối hợp',
+    'tăng tiền',
+    'tăng tỉ lệ đột biến',
+    'tăng tỉ lệ xảy chân'
+];
 
 /* =====================================
     DOM (tham chiếu phần tử)
@@ -61,6 +72,39 @@ let bgMusicPlayer = null;
 let musicPlaying = false;
 const defaultMusicLabelOn = '🔊 Tắt nhạc';
 const defaultMusicLabelOff = '🔊 Bật nhạc';
+
+// Music map: key -> YouTube video id
+const MUSIC_MAP = {
+    'M7': 'KheFsJvAvsU', // existing default
+    'M4': 'g1R6gvvnYZc',
+    'M5': 'tb4dR_G6iEc',
+    'M6': 'DihV7AinGIg',
+    'M3': 'tb4dR_G6iEc'
+};
+
+function getSelectedVideoId() {
+    const sel = document.getElementById('musicSelect');
+    if (!sel) return MUSIC_MAP['M7'];
+    const key = sel.value || 'M7';
+    return MUSIC_MAP[key] || MUSIC_MAP['M7'];
+}
+
+function changeMusicByKey(key) {
+    const vid = MUSIC_MAP[key] || MUSIC_MAP['M7'];
+    if (bgMusicPlayer && bgMusicPlayer.loadVideoById) {
+        try {
+            bgMusicPlayer.loadVideoById(vid);
+            if (!musicPlaying) {
+                // keep paused state
+                bgMusicPlayer.pauseVideo();
+            } else {
+                bgMusicPlayer.playVideo();
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+}
 
 // Lưu ý: phần hiển thị đội đã được tách sang selectedDisplay.js
 
@@ -95,10 +139,8 @@ window.addEventListener(
 
         renderShop();
 
-        // render phần đội hình (module riêng)
-        renderSelectedPlayersUI(selectedPlayers, selectionOrder, gold, 'selectedPlayers', 'gold', onDeselect);
-            updateVisibleLane();
-            setupLaneClickHandlers();
+        // show resource choice before allowing team selection
+        showResourceChoice();
 
         // initialize music controls (YouTube player)
         try {
@@ -109,17 +151,27 @@ window.addEventListener(
                 // create YT player when API ready
                 function createYT() {
                     try {
+                        const initial = getSelectedVideoId();
                         bgMusicPlayer = new YT.Player('ytPlayer', {
                             height: '0',
                             width: '0',
-                            videoId: 'KheFsJvAvsU',
-                            playerVars: { controls: 1, loop: 1, playlist: 'KheFsJvAvsU', modestbranding: 1, rel: 0 },
+                            videoId: initial,
+                            playerVars: { controls: 1, loop: 1, playlist: initial, modestbranding: 1, rel: 0 },
                             events: {
                                 onReady: function () {
                                     // nothing
                                 }
                             }
                         });
+
+                        // wire selector to change music dynamically
+                        const musicSelect = document.getElementById('musicSelect');
+                        if (musicSelect) {
+                            musicSelect.addEventListener('change', () => {
+                                const key = musicSelect.value || 'M7';
+                                changeMusicByKey(key);
+                            });
+                        }
                     } catch (e) {
                         // ignore
                     }
@@ -449,6 +501,11 @@ function buyPlayer(
     playerId
 ) {
 
+    if (!selectedResource) {
+        alert('Vui lòng chọn tài nguyên trước khi chọn đội hình');
+        return;
+    }
+
     if (
         selectedPlayers[lane]
     ) {
@@ -587,10 +644,15 @@ function calculateTeamPower() {
             0
         ) / 5;
 
+    const res = (selectedResource || '').toLowerCase();
+    const skillMul = res === 'tăng kỹ năng' ? 1.3 : 1.2;
+    const clutchMul = res === 'tăng đột biến' ? 1.0 : 0.8;
+    const synergyMul = res === 'tăng phối hợp' ? 1.6 : 1.5;
+
     const power =
-        avgSkill * 1.2 +
-        avgClutch * 0.8 +
-        avgSynergy * 1.5;
+        avgSkill * skillMul +
+        avgClutch * clutchMul +
+        avgSynergy * synergyMul;
 
     return Number(
         power.toFixed(2)
@@ -627,9 +689,9 @@ function calculateBotPower(
         ) / roster.length;
 
     const power =
-        avgSkill * 1.2 +
-        avgClutch * 0.8 +
-        avgSynergy * 1.5;
+        avgSkill * 1.3 +
+        avgClutch * 1.1 +
+        avgSynergy * 1.4;
 
     return Number(
         power.toFixed(2)
@@ -654,15 +716,106 @@ function randomPick(
     );
 }
 
+// Resource choice UI and handlers
+function showResourceChoice() {
+    const modal = document.getElementById('resourceChoice');
+    // if modal not present, continue initialization
+    if (!modal) {
+        renderSelectedPlayersUI(selectedPlayers, selectionOrder, gold, 'selectedPlayers', 'gold', onDeselect);
+        updateVisibleLane();
+        setupLaneClickHandlers();
+        return;
+    }
+
+    const cardsContainer = document.getElementById('resourceCards');
+    if (!cardsContainer) {
+        modal.style.display = 'none';
+        renderSelectedPlayersUI(selectedPlayers, selectionOrder, gold, 'selectedPlayers', 'gold', onDeselect);
+        updateVisibleLane();
+        setupLaneClickHandlers();
+        return;
+    }
+
+    // pick 3 random resources
+    const choices = randomPick(RESOURCE_POOL, 3);
+    cardsContainer.innerHTML = '';
+
+    choices.forEach(choice => {
+        const card = document.createElement('div');
+        card.className = 'resource-card';
+        const icon = getResourceIcon(choice);
+        card.innerHTML = `
+            <div class="card-icon">${icon}</div>
+            <div class="card-title">${choice}</div>
+            <div class="card-desc">Nhận hiệu ứng trước khi chọn đội hình</div>
+        `;
+        card.addEventListener('click', () => {
+            // visual selection
+            cardsContainer.querySelectorAll('.resource-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            // apply immediately
+            applyResource(choice);
+        });
+        cardsContainer.appendChild(card);
+    });
+
+    modal.style.display = 'flex';
+}
+
+function applyResource(choice) {
+    selectedResource = choice;
+    const res = (selectedResource || '').toLowerCase();
+
+    // apply immediate effects
+    if (res === 'tăng tiền') {
+        gold += 2;
+    }
+
+    // update UI
+    if (goldEl) goldEl.textContent = gold;
+
+    const modal = document.getElementById('resourceChoice');
+    if (modal) modal.style.display = 'none';
+
+    // now initialize the rest of the UI
+    renderShop();
+    renderSelectedPlayersUI(selectedPlayers, selectionOrder, gold, 'selectedPlayers', 'gold', onDeselect);
+    updateVisibleLane();
+    setupLaneClickHandlers();
+}
+
+function getResourceIcon(choice) {
+    const key = (choice || '').toLowerCase();
+    if (key.includes('kỹ')) return '🔥';
+    if (key.includes('đột')) return '⚡';
+    if (key.includes('phối')) return '🤝';
+    if (key.includes('tiền')) return '🪙';
+    if (key.includes('tỉ lệ đột')) return '🎯';
+    if (key.includes('xảy chân')) return '💥';
+    return '✨';
+}
+
 /* =====================================
     DÒNG PHÂN TÍCH (commentary)
     Các câu dẫn cho thắng/thua/trung lập
 ===================================== */
 
 const winLines = [
-    'Đội ta có chiến công đầu',
     'Đội ăn được rùa thần',
     'Đội ăn được lord',
+    'Bắt lẻ thành công người chơi xạ thủ team bạn',
+    'Bắt lẻ thành công người chơi đi rừng team bạn',
+    'Bắt lẻ thành công người chơi pháp sư team bạn',
+    'Tốc biến makeplay quá tốt đến từ người chơi hỗ trợ team ta',
+    'triple kill cho người chơi xạ thủ',
+    'maniac cho người chơi xạ thủ',
+    'SAVAGEEEE cho người chơi xạ thủ, gần như là end game',
+    'triple kill cho người chơi đi rừng',
+    'maniac cho người chơi đi rừng',
+    'SAVAGEEEE cho người chơi đi rừng, gần như là end game',
+    'triple kill cho người chơi pháp sư',
+    'maniac cho người chơi pháp sư',
+    'SAVAGEEEE cho người chơi pháp sư, gần như là end game',
     'Solo kill ở đường giữa',
     'Solo kill ở đường vàng',
     'Solo kill ở đường kinh nghiệm',
@@ -670,9 +823,21 @@ const winLines = [
 ];
 
 const loseLines = [
-    'Đội bot có chiến công đầu',
     'Đội bot ăn được rùa thần',
     'Đội bot ăn được lord',
+    'người chơi xạ thủ bị bắt lẻ bởi team bot',
+    'người chơi đi rừng bị Bắt lẻ thành công ',
+    'người chơi pháp sư Bắt lẻ thành công ',
+        'triple kill cho người chơi xạ thủ team bot',
+    'maniac cho người chơi xạ thủ team bot',
+    'SAVAGEEEE cho người chơi xạ thủ, gần như là end game team bot',
+    'triple kill cho người chơi đi rừng team bot',
+    'maniac cho người chơi đi rừng team bot',
+    'SAVAGEEEE cho người chơi đi rừng, gần như là end game team bot',
+    'triple kill cho người chơi pháp sư team bot',
+    'maniac cho người chơi pháp sư team bot',
+    'SAVAGEEEE cho người chơi pháp sư, gần như là end game team bot',
+    'Tốc biến makeplay quá tốt đến từ người chơi hỗ trợ team bạn',
     'Team ta bị Solo kill ở đường giữa',
     'Team ta bị Solo kill ở đường vàng',
     'Team ta bị Solo kill ở đường kinh nghiệm',
@@ -974,13 +1139,12 @@ function playSingleGame(
        Thêm yếu tố ngẫu nhiên
     */
 
-    const playerRoll =
-        playerPower +
-        Math.random() * 15;
+    const res = (selectedResource || '').toLowerCase();
+    const playerRand = res === 'tăng tỉ lệ đột biến' ? Math.random() * 20 : Math.random() * 10;
+    const botRand = res === 'tăng tỉ lệ xảy chân' ? Math.random() * 20 : Math.random() * 10;
 
-    const botRoll =
-        botPower +
-        Math.random() * 15;
+    const playerRoll = playerPower + playerRand;
+    const botRoll = botPower + botRand;
 
     return playerRoll >
         botRoll
@@ -1162,6 +1326,18 @@ async function startTournament() {
     matchLog.innerHTML = '';
     hideResultModal();
     tournamentScreen.classList.remove('hidden');
+    // scroll tournament screen into view for user
+    try {
+        tournamentScreen.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (e) {
+        // fallback
+        window.scrollTo({ top: tournamentScreen.offsetTop || 0 });
+    }
+    // hide the selected team UI while tournament runs
+    try {
+        const teamPanel = document.querySelector('.team-panel');
+        if (teamPanel) teamPanel.classList.add('hidden');
+    } catch (e) {}
 
     // attempt to play background music on tournament start (user gesture may allow autoplay)
     try {
@@ -1483,7 +1659,7 @@ if (startBtn) startBtn.addEventListener('click', startTournament);
 const newGameBtn = document.getElementById('newGameBtn');
 if (newGameBtn) newGameBtn.addEventListener('click', () => {
     // reset state
-    gold = 21;
+    gold = 20;
     refreshRemain = 4;
     selectedPlayers = { marksman: null, support: null, fighter: null, mage: null, jungle: null };
     currentSelectionIndex = 0;
@@ -1499,6 +1675,11 @@ if (newGameBtn) newGameBtn.addEventListener('click', () => {
     const resultModalEl = document.getElementById('resultModal');
     if (tournamentScreen) tournamentScreen.classList.add('hidden');
     if (resultModalEl) resultModalEl.classList.add('hidden');
+    // show team panel again
+    try {
+        const teamPanel = document.querySelector('.team-panel');
+        if (teamPanel) teamPanel.classList.remove('hidden');
+    } catch (e) {}
     // hide rematch and mark not running
     const rematchBtnNow = document.getElementById('rematchBtn');
     if (rematchBtnNow) rematchBtnNow.style.display = 'none';
