@@ -1069,6 +1069,56 @@ h1, h2, h3, h4, h5, h6 {
     }
 }
 
+/* Additional mobile fixes: make team selection wrap and cards smaller for narrow screens */
+@media (max-width: 420px) {
+    .player-row {
+        flex-wrap: wrap;
+        overflow-x: visible;
+        justify-content: center;
+        gap: 10px;
+        padding-bottom: 8px;
+    }
+
+    .player-card {
+        min-width: 110px;
+        max-width: 140px;
+        padding: 8px;
+    }
+
+    .player-card img {
+        height: 84px;
+    }
+
+    #selectedPlayers {
+        gap: 8px;
+        padding: 6px;
+        justify-content: center;
+    }
+
+    .selected-card {
+        min-width: 100px;
+        padding: 8px;
+    }
+
+    .team-panel {
+        padding: 12px 8px;
+    }
+}
+
+@media (max-width: 360px) {
+    .player-card {
+        min-width: 100px;
+        max-width: 130px;
+    }
+
+    .player-card img {
+        height: 72px;
+    }
+
+    .player-name { font-size: 13px; }
+    .stat { font-size: 11px; }
+}
+
 /* TOURNAMENT STYLES */
 
 #tournamentScreen{
