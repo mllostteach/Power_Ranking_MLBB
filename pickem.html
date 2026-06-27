@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pick'em MLBB</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { background: var(--bg-primary); color: var(--text-primary); }
+    .pickem-shell { max-width: 1100px; margin: 24px auto; padding: 20px; }
+    .panel { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: var(--shadow-md); }
+    .auth-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field input, .field select { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-tertiary); color: var(--text-primary); }
+    .btn { padding: 10px 14px; border: none; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; cursor: pointer; }
+    .btn.secondary { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+    .user-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .question-card { border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 12px; background: var(--bg-tertiary); }
+    .option-list { display: grid; gap: 8px; margin-top: 10px; }
+    .option-btn { text-align: left; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-primary); cursor: pointer; }
+    .option-btn.active { background: #2563eb; border-color: #60a5fa; }
+    .auth-toggle { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+    .auth-form { display: block; }
+    .auth-form.hidden { display: none; }
+    .status { margin-top: 10px; color: var(--accent-warning); font-weight: 600; }
+    .hint { color: var(--text-secondary); font-size: 14px; }
+    .hidden { display: none; }
+    .score-pill { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #0f766e; color: white; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div>PICK'EM MSC</div>
+    <div class="nav-links">
+      <a href="pickem.html">Pick'Em MSC</a>
+      <a href="Index36.html">ML Mất Não</a>
+      <a href="MSCatEWC.html" class="msc-btn">MSC</a>
+      <a href="M8.html" class="mseries-btn">M8</a>
+      <a href="MPLID.html">MPL ID</a>
+      <a href="MPLPH.html">MPL PH</a>
+      <a href="MPLMY.html">MPL MY</a>
+      <div class="dropdown">
+        <a class="dropbtn">MCT SERIES ▾</a>
+        <div class="dropdown-content">
+          <a href="India.html">India</a>
+          <a href="EECA.html">EECA</a>
+          <a href="MCTSEA.html">MCT SEA</a>
+          <a href="MCTEMEA.html">MCT EMEA</a>
+          <a href="MCTAMER.html">MCT AMER</a>
+          <a href="MCTEA.html">MCT EA</a>
+        </div>
+      </div>
+      <button id="themeToggleBtn">🌙 Tối</button>
+    </div>
+    <button class="hamburger" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+  </div>
+
+  <div class="pickem-shell">
+    <div class="panel" id="authPanel">
+      <h2>Đăng nhập Pick'em</h2>
+      <p class="hint">Nếu chưa có tài khoản, hãy đăng ký.</p>
+      <div class="auth-toggle">
+        <button class="btn" id="showLoginBtn">Đăng nhập</button>
+        <button class="btn secondary" id="showRegisterBtn">Đăng ký</button>
+      </div>
+      <div class="auth-grid">
+        <div class="auth-form" id="loginForm">
+          <h3>Đăng nhập</h3>
+          <div class="field"><label>ID Ingame</label><input id="loginGameId" /></div>
+          <div class="field"><label>Server Ingame</label><input id="loginServer" /></div>
+          <button class="btn" id="loginBtn">Đăng nhập</button>
+        </div>
+        <div class="auth-form hidden" id="registerForm">
+          <h3>Đăng ký</h3>
+          <div class="field"><label>ID Ingame</label><input id="registerGameId" /></div>
+          <div class="field"><label>Server Ingame</label><input id="registerServer" /></div>
+          <div class="field"><label>Tên tài khoản FB</label><input id="registerName" /></div>
+          <button class="btn secondary" id="registerBtn">Đăng ký</button>
+          <button class="btn" id="backToLoginBtn" style="margin-top:8px;">Quay lại đăng nhập</button>
+        </div>
+      </div>
+      <div class="status" id="authStatus"></div>
+    </div>
+
+    <div class="panel hidden" id="pickemPanel">
+      <div class="user-header">
+        <div>
+          <h2>Pick'em Tournament</h2>
+          <p id="userMeta" class="hint"></p>
+        </div>
+        <div class="score-pill" id="userScore">0 điểm</div>
+      </div>
+
+      <div class="panel" id="wildcardSection">
+        <h3>Wildcard</h3>
+        <div id="wildcardQuestions"></div>
+      </div>
+
+      <div class="panel" id="mainSection">
+        <h3>Main Stage</h3>
+        <div id="mainQuestions"></div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="pickem.js"></script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Pick'em</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { background: var(--bg-primary); color: var(--text-primary); }
+    .admin-shell { max-width: 1100px; margin: 24px auto; padding: 20px; }
+    .panel { background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow-md); }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .field { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+    .field input, .field select, .field textarea { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-tertiary); color: var(--text-primary); }
+    .btn { padding: 10px 14px; border: none; border-radius: 10px; background: linear-gradient(135deg, #ef4444, #f59e0b); color: white; cursor: pointer; }
+    .btn.secondary { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .btn.success { background: linear-gradient(135deg, #10b981, #059669); }
+    .question-item { border: 1px solid var(--border-color); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: var(--bg-tertiary); }
+    .inline-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .pill { display: inline-block; padding: 6px 10px; border-radius: 999px; background: #1d4ed8; color: white; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="admin-shell">
+    <div class="panel">
+      <h2>Quản trị Pick'em</h2>
+      <p class="hint">Tạo câu hỏi cho Wildcard trước, sau đó mở Main Stage.</p>
+    </div>
+
+    <div class="panel">
+      <h3>Top người chơi</h3>
+      <div id="topScorersList"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Thêm câu hỏi</h3>
+      <div class="grid">
+        <div>
+          <div class="field"><label>Phần</label><select id="phaseSelect"><option value="wildcard">Wildcard</option><option value="mainStage">Main Stage</option></select></div>
+          <div class="field"><label>Câu hỏi</label><textarea id="questionText" rows="3"></textarea></div>
+          <div class="field"><label>Điểm</label><input id="questionPoints" type="number" value="5" /></div>
+          <div class="field"><label>Đáp án đúng</label><input id="correctAnswer" /></div>
+        </div>
+        <div>
+          <div class="field"><label>Danh sách đáp án (ngăn cách bằng dấu ;)</label><textarea id="optionsText" rows="5"></textarea></div>
+          <button class="btn" id="addQuestionBtn">Thêm câu hỏi</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Điều khiển phần</h3>
+      <div class="inline-actions">
+        <button class="btn secondary" id="openWildcardBtn">Mở Wildcard</button>
+        <button class="btn" id="closeWildcardBtn">Đóng Wildcard</button>
+        <button class="btn secondary" id="openMainBtn">Mở Main Stage</button>
+        <button class="btn" id="closeMainBtn">Đóng Main Stage</button>
+        <button class="btn success" id="finalizeBtn">Chốt điểm</button>
+      </div>
+    </div>
+
+    <div class="panel hidden" id="editQuestionPanel">
+      <h3>Sửa câu hỏi / đáp án</h3>
+      <div class="field"><label>Câu hỏi</label><textarea id="editQuestionText" rows="3"></textarea></div>
+      <div class="field"><label>Điểm</label><input id="editQuestionPoints" type="number" /></div>
+      <div class="field"><label>Đáp án đúng</label><input id="editCorrectAnswer" /></div>
+      <div class="field"><label>Danh sách đáp án (ngăn cách bằng dấu ;)</label><textarea id="editOptionsText" rows="5"></textarea></div>
+      <div class="inline-actions">
+        <button class="btn success" id="saveEditBtn">Lưu thay đổi</button>
+        <button class="btn" id="cancelEditBtn">Hủy</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Danh sách câu hỏi Wildcard</h3>
+      <div id="wildcardList"></div>
+    </div>
+
+    <div class="panel">
+      <h3>Danh sách câu hỏi Main Stage</h3>
+      <div id="mainList"></div>
+    </div>
+  </div>
+
+  <script type="module" src="pickem-admin.js"></script>
+</body>
+</html>
